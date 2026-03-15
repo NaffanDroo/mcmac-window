@@ -1,6 +1,18 @@
 import AppKit
 import ApplicationServices
 
+private let logPath = "/tmp/mcmac-window.log"
+private func mlog(_ msg: String) {
+    let line = "\(Date()) \(msg)\n"
+    if let data = line.data(using: .utf8) {
+        if let handle = FileHandle(forWritingAtPath: logPath) {
+            handle.seekToEndOfFile(); handle.write(data); handle.closeFile()
+        } else {
+            FileManager.default.createFile(atPath: logPath, contents: data)
+        }
+    }
+}
+
 class WindowMover {
 
     static let shared = WindowMover()
@@ -9,7 +21,12 @@ class WindowMover {
     // MARK: - Public API
 
     func move(action: WindowAction) {
-        guard let window = focusedWindow() else { return }
+        mlog("move(\(action.rawValue)) triggered")
+        guard let window = focusedWindow() else {
+            mlog("focusedWindow() returned nil — AX permission likely missing or revoked")
+            return
+        }
+        mlog("got focused window, calling moveWindow")
         moveWindow(window, action: action)
     }
 
@@ -23,7 +40,9 @@ class WindowMover {
         let vf     = screenContaining(axPoint: axPos, screens: screens, primaryScreenHeight: ph)
         let target = computeTargetRect(action: action, visibleFrame: vf,
                                        primaryScreenHeight: ph, currentAXOrigin: axPos)
+        mlog("setFrame \(target) on window")
         setFrame(target, on: window)
+        mlog("setFrame complete")
     }
 
     // MARK: - Focused window
@@ -39,11 +58,19 @@ class WindowMover {
     /// user focus. Because our app is LSUIElement=true, we never appear here, so
     /// this always returns the correct target app.
     private func focusedWindow() -> AXUIElement? {
-        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        guard let app = NSWorkspace.shared.frontmostApplication else {
+            mlog("frontmostApplication is nil")
+            return nil
+        }
+        mlog("frontmostApplication = \(app.bundleIdentifier ?? app.localizedName ?? "?") pid=\(app.processIdentifier)")
         let axApp = AXUIElementCreateApplication(app.processIdentifier)
         var ref: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref) == .success,
-              let win = ref else { return nil }
+        let result = AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref)
+        if result != .success {
+            mlog("AXUIElementCopyAttributeValue(kAXFocusedWindowAttribute) failed — AXError \(result.rawValue) (likely no Accessibility permission)")
+            return nil
+        }
+        guard let win = ref else { return nil }
         return (win as! AXUIElement)
     }
 

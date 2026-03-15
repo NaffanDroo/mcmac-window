@@ -26,10 +26,17 @@ MACOS="$CONTENTS/MacOS"
 mkdir -p "$MACOS"
 
 echo "→ Compiling…"
-swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" $OPT_FLAG -o "$MACOS/$BINARY_NAME"
+swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "$OPT_FLAG" -o "$MACOS/$BINARY_NAME"
 
 echo "→ Copying Info.plist…"
 cp Info.plist "$CONTENTS/Info.plist"
+
+echo "→ Signing bundle…"
+# Sign the whole bundle so the code-signing identifier matches the bundle ID
+# (com.example.mcmac-window). Without this the linker assigns the bare binary
+# name as the identifier, which mismatches the TCC entry macOS creates when
+# the user enables Accessibility in System Settings → Privacy & Security.
+codesign --force --sign - "$BUNDLE"
 
 echo ""
 echo "✓ Built: $BUNDLE"
