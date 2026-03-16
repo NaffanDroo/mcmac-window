@@ -20,7 +20,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Types that map to changelog sections in release-please-config.json
+          # Types that map to changelog sections in release-please-config.json.
+          # Must stay in sync with the type list in CONTRIBUTING.md and
+          # scripts/check-commit-msg.sh.
           types: |
             feat
             fix
@@ -29,6 +31,8 @@ jobs:
             docs
             test
             chore
+            ci
+            build
           requireScope: false
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |

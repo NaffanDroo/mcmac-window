@@ -13,7 +13,7 @@ if echo "$MSG" | grep -qE "^(Merge|Revert|fixup!|squash!)"; then
     exit 0
 fi
 
-PATTERN="^(feat|fix|perf|refactor|docs|test|chore)(\(.+\))?!?: .+"
+PATTERN="^(feat|fix|perf|refactor|docs|test|chore|ci|build)(\(.+\))?!?: .+"
 
 if ! echo "$MSG" | grep -qE "$PATTERN"; then
     echo ""
@@ -23,7 +23,7 @@ if ! echo "$MSG" | grep -qE "$PATTERN"; then
     echo "  Example:   feat: add top-right quarter snap action"
     echo "             fix(geometry): correct AX origin on retina displays"
     echo ""
-    echo "  Allowed types: feat  fix  perf  refactor  docs  test  chore"
+    echo "  Allowed types: feat  fix  perf  refactor  docs  test  chore  ci  build"
     echo ""
     echo "  Your message: $(echo "$MSG" | head -1)"
     echo ""

@@ -55,7 +55,9 @@ Common types:
 | `refactor` | Code change that neither fixes a bug nor adds a feature |
 | `test` | Adding or updating tests |
 | `docs` | Documentation only changes |
-| `chore` | Build scripts, CI, tooling |
+| `chore` | Maintenance: dependencies, config, release tooling |
+| `ci` | GitHub Actions workflows or CI configuration |
+| `build` | Changes to `build.sh`, `test.sh`, `run.sh`, or the Swift compilation pipeline |
 
 Examples:
 
