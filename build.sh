@@ -31,7 +31,7 @@ MACOS="$CONTENTS/MacOS"
 mkdir -p "$MACOS"
 
 echo "→ Compiling…"
-swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "$OPT_FLAG" "${EXTRA_FLAGS[@]}" -o "$MACOS/$BINARY_NAME"
+swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "$OPT_FLAG" ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} -o "$MACOS/$BINARY_NAME"
 
 echo "→ Copying Info.plist…"
 cp Info.plist "$CONTENTS/Info.plist"

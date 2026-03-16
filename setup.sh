@@ -10,6 +10,17 @@ if ! command -v brew &>/dev/null; then
     exit 1
 fi
 
+# SwiftLint requires full Xcode (not just Command Line Tools) to load SourceKit.
+XCODE_PATH=$(xcode-select -p 2>/dev/null || true)
+if [[ "$XCODE_PATH" != */Xcode*.app/* ]]; then
+    echo "  ✗ Xcode Command Line Tools are selected, but full Xcode is required"
+    echo "    for SwiftLint to load SourceKit."
+    echo ""
+    echo "    Fix: sudo xcode-select -s /Applications/Xcode.app"
+    echo ""
+    exit 1
+fi
+
 echo "→ Installing pre-commit…"
 brew install pre-commit
 

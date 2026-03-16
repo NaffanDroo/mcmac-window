@@ -67,10 +67,14 @@ class WindowMover {
         var ref: CFTypeRef?
         let result = AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref)
         if result != .success {
-            mlog("AXUIElementCopyAttributeValue(kAXFocusedWindowAttribute) failed — AXError \(result.rawValue) (likely no Accessibility permission)")
+            mlog("kAXFocusedWindowAttribute failed — AXError \(result.rawValue) (likely no AX permission)")
             return nil
         }
-        return ref as? AXUIElement
+        guard let win = ref else { return nil }
+        // AXUIElementCopyAttributeValue always returns an AXUIElement for kAXFocusedWindowAttribute.
+        // Parentheses silence the "forced downcast will never produce nil" compiler warning;
+        // as? is rejected here because AXUIElement is a CF type (the conditional cast always succeeds).
+        return (win as! AXUIElement) // swiftlint:disable:this force_cast
     }
 
     // MARK: - AX read/write (internal for tests)
@@ -80,7 +84,7 @@ class WindowMover {
         guard AXUIElementCopyAttributeValue(element, kAXPositionAttribute as CFString, &ref) == .success,
               let axVal = ref else { return nil }
         var point = CGPoint.zero
-        guard AXValueGetValue(axVal as! AXValue, .cgPoint, &point) else { return nil }
+        guard AXValueGetValue(axVal as! AXValue, .cgPoint, &point) else { return nil } // swiftlint:disable:this force_cast
         return point
     }
 
