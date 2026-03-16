@@ -33,6 +33,8 @@ Grant **Accessibility** permission when prompted (System Settings → Privacy & 
 | `⌃⌥⇧ →` | Bottom-right quarter |
 | `⌃⌥⌘⇧ ←` | Cycle thirds left |
 | `⌃⌥⌘⇧ →` | Cycle thirds right |
+| `⌃⌥⌘ ↑` | Left two thirds |
+| `⌃⌥⌘ ↓` | Right two thirds |
 | `⌃⌥ ↩` | Maximize |
 | `⌃⌥ Space` | Center (65% of screen) |
 
@@ -58,7 +60,7 @@ Sources/
   main.swift           — NSApplication bootstrap
 Tests/
   TestFramework.swift  — zero-dependency assertion helpers
-  GeometryTests.swift  — unit tests for all geometry logic (31 tests)
+  GeometryTests.swift  — unit tests for all geometry logic (36 tests)
   WindowMoverTests.swift — integration tests (own-process AX)
   TestRunner.swift     — test entry point
 Info.plist             — LSUIElement=true (no Dock icon)

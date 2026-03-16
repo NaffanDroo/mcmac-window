@@ -159,6 +159,32 @@ func geometryTests() -> [Test] { [
                  single[0].visibleFrame)
     },
 
+    // MARK: two thirds
+
+    Test("leftTwoThirds: x=0, y=37, w=1280, h=1043") {
+        let r = target(.leftTwoThirds)
+        assertEq(r.origin.x, 0,    "x"); assertEq(r.origin.y, 37,   "y")
+        assertEq(r.width, 1280,    "w"); assertEq(r.height, 1043,   "h")
+    },
+    Test("rightTwoThirds: x=640, y=37, w=1280, h=1043") {
+        let r = target(.rightTwoThirds)
+        assertEq(r.origin.x, 640,  "x"); assertEq(r.origin.y, 37,   "y")
+        assertEq(r.width, 1280,    "w"); assertEq(r.height, 1043,   "h")
+    },
+    Test("leftTwoThirds + rightTwoThirds overlap by exactly one third") {
+        let L = target(.leftTwoThirds); let R = target(.rightTwoThirds)
+        let overlap = L.maxX - R.minX
+        assertEq(overlap, vf.width / 3, tol: 0.001, "overlap width")
+    },
+    Test("leftTwoThirds left-aligns with visibleFrame") {
+        assertEq(target(.leftTwoThirds).origin.x, axRect(from: vf, primaryScreenHeight: ph).minX)
+    },
+    Test("rightTwoThirds right-aligns with visibleFrame") {
+        let r  = target(.rightTwoThirds)
+        let ax = axRect(from: vf, primaryScreenHeight: ph)
+        assertEq(r.maxX, ax.maxX, tol: 0.001, "right edge")
+    },
+
     // MARK: non-regression
 
     Test("left + right halves touch with no gap, sum to full width") {

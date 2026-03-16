@@ -54,6 +54,9 @@ func computeTargetRect(
         return nextThirdRect(direction: -1, ax: ax, w: w, h: h, currentX: currentAXOrigin.x)
     case .nextThirdRight:
         return nextThirdRect(direction: +1, ax: ax, w: w, h: h, currentX: currentAXOrigin.x)
+
+    case .leftTwoThirds:  return CGRect(x: ax.minX,           y: ax.minY, width: w * 2 / 3, height: h)
+    case .rightTwoThirds: return CGRect(x: ax.minX + w / 3,   y: ax.minY, width: w * 2 / 3, height: h)
     }
 }
 
