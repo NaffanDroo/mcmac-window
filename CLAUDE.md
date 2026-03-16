@@ -116,3 +116,17 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on `macos-15` for every push an
 | `⌃⌥ Space` | Center (65% of screen) |
 
 All actions apply to whichever screen the frontmost window currently occupies.
+
+### Push-through behaviour
+
+Pressing the same directional hotkey a second time when the window is already
+at its snap target moves the window to the **mirror position on the adjacent
+screen** in that direction. For example:
+
+- Middle screen, window at left half → press `⌃⌥ ←` again → right half of
+  the left screen
+- Middle screen, window at top-right quarter → press `⌃⌥⌘ →` again → top-left
+  quarter of the right screen
+
+Actions without a directional mirror (`⌃⌥ ↩` maximize, `⌃⌥ Space` center,
+and the cycling thirds) do not push through.

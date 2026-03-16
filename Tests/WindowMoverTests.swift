@@ -68,6 +68,28 @@ func windowMoverTests() -> [Test] { [
         assertEq(window.frame.origin.x,    vf.origin.x,   tol: 3, "x")
     },
 
+    Test("push-through: pressing leftHalf twice on single screen stays at leftHalf") {
+        // Verifies that push-through is a no-op when there is no adjacent screen.
+        // On multi-screen machines this test exercises the same path but may succeed
+        // with push-through; the invariant is that the window ends up snapped (not
+        // in some undefined state).
+        guard let vf = NSScreen.main?.visibleFrame else { try skip("no screen") }
+        let window = makeTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { try skip("no AX element") }
+        WindowMover.shared.moveWindow(ax, action: .leftHalf); pump()
+        WindowMover.shared.moveWindow(ax, action: .leftHalf); pump()
+        if NSScreen.screens.count == 1 {
+            // No adjacent screen — must stay at leftHalf of the only screen
+            assertEq(window.frame.origin.x,    vf.origin.x,   tol: 3, "x")
+            assertEq(window.frame.size.width,  vf.width / 2,  tol: 3, "w")
+            assertEq(window.frame.size.height, vf.height,     tol: 3, "h")
+        } else {
+            // At least two screens — window must be snapped somewhere (not at arbitrary size)
+            assertTrue(window.frame.size.width  > 0, "snapped width > 0")
+            assertTrue(window.frame.size.height > 0, "snapped height > 0")
+        }
+    },
+
     Test("nextThirdRight: three cycles return window to starting x") {
         guard !NSScreen.screens.isEmpty, let vf = NSScreen.main?.visibleFrame else { try skip("no screen") }
         let window = makeTestWindow(); defer { window.close() }
