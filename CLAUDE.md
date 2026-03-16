@@ -110,6 +110,8 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on `macos-15` for every push an
 | `⌃⌥⇧ →` | Bottom-right quarter |
 | `⌃⌥⌘⇧ ←` | Cycle thirds left |
 | `⌃⌥⌘⇧ →` | Cycle thirds right |
+| `⌃⌥⌘ ↑` | Left two thirds |
+| `⌃⌥⌘ ↓` | Right two thirds |
 | `⌃⌥ ↩` | Maximize |
 | `⌃⌥ Space` | Center (65% of screen) |
 

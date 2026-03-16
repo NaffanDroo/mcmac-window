@@ -33,7 +33,49 @@ cd mcmac-window
 
 **No SPM, no Xcode project** — The build is a single `swiftc` invocation. External dependencies require explicit approval.
 
+## Commit Messages
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Each commit message must have a structured format:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Common types:
+
+| Type | When to use |
+|------|-------------|
+| `feat` | A new snap action, hotkey, or user-visible feature |
+| `fix` | A bug fix |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `test` | Adding or updating tests |
+| `docs` | Documentation only changes |
+| `chore` | Build scripts, CI, tooling |
+
+Examples:
+
+```
+feat: add top-right quarter snap action
+fix: use NSWorkspace.frontmostApplication to avoid AX race
+test: add geometry tests for two-thirds snap
+docs: update keyboard shortcuts table in README
+chore: add macos-15 runner to CI workflow
+```
+
+Breaking changes should append `!` after the type and include a `BREAKING CHANGE:` footer:
+
+```
+feat!: change hotkey modifier from ⌃⌥ to ⌃⌘
+
+BREAKING CHANGE: all existing hotkey bindings use the new modifier
+```
+
 ## Pull Requests
 
 - Every new `WindowAction` case needs a geometry test.
 - Run `./build.sh` and `./test.sh` before opening a PR.
+- PR titles should follow the same Conventional Commits format as commit messages.

@@ -57,8 +57,10 @@ class HotkeyManager {
         Binding(keyCode: Key.rightArrow, carbonMods: C|O|S,     action: .bottomRight,    display: "⌃⌥⇧ →     Bottom Right"),
         Binding(keyCode: Key.return,     carbonMods: C|O,       action: .maximize,       display: "⌃⌥ ↩      Maximize"),
         Binding(keyCode: Key.space,      carbonMods: C|O,       action: .center,         display: "⌃⌥ Space  Center"),
-        Binding(keyCode: Key.leftArrow,  carbonMods: C|O|Cm|S,  action: .nextThirdLeft,  display: "⌃⌥⌘⇧ ←   Third Left"),
-        Binding(keyCode: Key.rightArrow, carbonMods: C|O|Cm|S,  action: .nextThirdRight, display: "⌃⌥⌘⇧ →   Third Right"),
+        Binding(keyCode: Key.leftArrow,  carbonMods: C|O|Cm|S,  action: .nextThirdLeft,   display: "⌃⌥⌘⇧ ←   Third Left"),
+        Binding(keyCode: Key.rightArrow, carbonMods: C|O|Cm|S,  action: .nextThirdRight,  display: "⌃⌥⌘⇧ →   Third Right"),
+        Binding(keyCode: Key.upArrow,    carbonMods: C|O|Cm,    action: .leftTwoThirds,   display: "⌃⌥⌘ ↑     Left Two Thirds"),
+        Binding(keyCode: Key.downArrow,  carbonMods: C|O|Cm,    action: .rightTwoThirds,  display: "⌃⌥⌘ ↓     Right Two Thirds"),
     ]
 
     func register() {
