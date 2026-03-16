@@ -32,7 +32,8 @@ class WindowMover {
 
     /// Internal: lets integration tests pass a known AX element directly.
     func moveWindow(_ window: AXUIElement, action: WindowAction) {
-        guard let axPos = windowPosition(window) else { return }
+        guard let axPos  = windowPosition(window),
+              let axSize = windowSize(window) else { return }
 
         let screens = NSScreen.screens.map { ScreenInfo(frame: $0.frame, visibleFrame: $0.visibleFrame) }
         let ph      = NSScreen.screens.first?.frame.height ?? 0
@@ -40,6 +41,21 @@ class WindowMover {
         let vf     = screenContaining(axPoint: axPos, screens: screens, primaryScreenHeight: ph)
         let target = computeTargetRect(action: action, visibleFrame: vf,
                                        primaryScreenHeight: ph, currentAXOrigin: axPos)
+
+        // Push-through: if the window is already at the snap target and the action
+        // has a directional mirror (e.g. leftHalf → rightHalf on the left screen),
+        // move to the mirror position on the adjacent screen instead.
+        let currentRect = CGRect(origin: axPos, size: axSize)
+        if rectsMatch(currentRect, target),
+           let pt       = pushThrough(for: action),
+           let neighbor = adjacentScreen(to: vf, direction: pt.direction, among: screens) {
+            let pushTarget = computeTargetRect(action: pt.action, visibleFrame: neighbor.visibleFrame,
+                                               primaryScreenHeight: ph, currentAXOrigin: axPos)
+            mlog("push-through: \(action.rawValue) → \(pt.action.rawValue) on adjacent screen")
+            setFrame(pushTarget, on: window)
+            return
+        }
+
         mlog("setFrame \(target) on window")
         setFrame(target, on: window)
         mlog("setFrame complete")
@@ -86,6 +102,15 @@ class WindowMover {
         var point = CGPoint.zero
         guard AXValueGetValue(axVal as! AXValue, .cgPoint, &point) else { return nil } // swiftlint:disable:this force_cast
         return point
+    }
+
+    func windowSize(_ element: AXUIElement) -> CGSize? {
+        var ref: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXSizeAttribute as CFString, &ref) == .success,
+              let axVal = ref else { return nil }
+        var size = CGSize.zero
+        guard AXValueGetValue(axVal as! AXValue, .cgSize, &size) else { return nil } // swiftlint:disable:this force_cast
+        return size
     }
 
     func setFrame(_ rect: CGRect, on window: AXUIElement) {
