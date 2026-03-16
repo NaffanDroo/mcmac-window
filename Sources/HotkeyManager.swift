@@ -71,7 +71,7 @@ class HotkeyManager {
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         InstallEventHandler(
             GetApplicationEventTarget(),
-            { (_, inEvent, inUserData) -> OSStatus in
+            { _, inEvent, inUserData -> OSStatus in
                 guard let event = inEvent, let userData = inUserData else {
                     return OSStatus(eventNotHandledErr)
                 }
