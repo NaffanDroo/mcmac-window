@@ -20,6 +20,12 @@ jobs:
       - name: Build
         run: ./build.sh
 
+      - name: Build (warnings as errors)
+        # A second compile pass with -warnings-as-errors ensures no warnings
+        # sneak into the codebase. Kept separate so the plain build artifact
+        # above is always produced even if this check is later adjusted.
+        run: ./build.sh --warnings-as-errors
+
       - name: Test
         run: ./test.sh
         # Geometry tests run fully. WindowMover integration tests require a

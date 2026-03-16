@@ -1,0 +1,42 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # Build and attach the .app bundle to the GitHub release
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Select Xcode
+        if: ${{ steps.release.outputs.release_created }}
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build release artifact
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          ./build.sh
+          zip -r mcmac-window.zip mcmac-window.app
+
+      - name: Upload release artifact
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ steps.release.outputs.tag_name }} mcmac-window.zip

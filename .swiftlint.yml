@@ -1,0 +1,57 @@
+included:
+  - Sources
+  - Tests
+
+excluded:
+  # Zero-dependency test infrastructure — uses intentional short names and
+  # aligned spacing that conflict with style rules.
+  - Tests/TestFramework.swift
+
+disabled_rules:
+  - todo                 # TODOs are acceptable in source comments
+  - identifier_name      # geometry code uses domain-standard short names:
+                         # w (width), h (height), vf (visibleFrame), ph
+                         # (primaryScreenHeight), ax (AX-coordinate rect)
+  - comma                # codebase uses column-alignment spacing in
+                         # multi-argument calls for readability
+  - colon                # same: aligned declarations use extra spaces
+  - trailing_comma       # trailing commas on last collection element are
+                         # valid Swift and improve git diff readability
+
+opt_in_rules:
+  - array_init
+  - closure_spacing
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - force_unwrapping     # flag ! unwraps; use guard/if-let instead
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+
+cyclomatic_complexity:
+  # computeTargetRect has one branch per snap action — inherent to the design.
+  warning: 20
+  error: 30
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 250
+  error: 350
+
+function_body_length:
+  # Test functions that return arrays of Test cases are inherently long.
+  warning: 200
+  error: 300
+
+file_length:
+  warning: 400
+  error: 600
