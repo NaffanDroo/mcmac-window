@@ -11,6 +11,67 @@ func axRect(from nsRect: CGRect, primaryScreenHeight ph: CGFloat) -> CGRect {
     return CGRect(x: nsRect.origin.x, y: axY, width: nsRect.width, height: nsRect.height)
 }
 
+// MARK: - Push-through support
+
+/// Direction used for cross-screen push-through.
+enum SnapDirection: Equatable {
+    case left, right, up, down
+}
+
+/// Maps a snap action to the mirror action and direction used when the window
+/// is already at the target position and the user presses the hotkey again.
+/// Returns nil for actions that have no meaningful push-through (maximize, center,
+/// cycling thirds — these either fill the screen or already cycle internally).
+func pushThrough(for action: WindowAction) -> (action: WindowAction, direction: SnapDirection)? {
+    switch action {
+    case .leftHalf:      return (.rightHalf,     .left)
+    case .rightHalf:     return (.leftHalf,      .right)
+    case .topHalf:       return (.bottomHalf,    .up)
+    case .bottomHalf:    return (.topHalf,       .down)
+    case .topLeft:       return (.topRight,      .left)
+    case .topRight:      return (.topLeft,       .right)
+    case .bottomLeft:    return (.bottomRight,   .left)
+    case .bottomRight:   return (.bottomLeft,    .right)
+    case .leftTwoThirds: return (.rightTwoThirds, .left)
+    case .rightTwoThirds:return (.leftTwoThirds,  .right)
+    case .maximize, .center, .nextThirdLeft, .nextThirdRight: return nil
+    }
+}
+
+/// Finds the screen immediately adjacent in the given direction.
+/// Uses AppKit visibleFrame midpoints for direction detection so the result
+/// is robust to irregular dock/menubar insets that prevent frames from touching.
+func adjacentScreen(to currentVF: CGRect, direction: SnapDirection, among screens: [ScreenInfo]) -> ScreenInfo? {
+    switch direction {
+    case .left:
+        return screens
+            .filter { $0.visibleFrame.midX < currentVF.midX }
+            .max(by: { $0.visibleFrame.midX < $1.visibleFrame.midX })
+    case .right:
+        return screens
+            .filter { $0.visibleFrame.midX > currentVF.midX }
+            .min(by: { $0.visibleFrame.midX < $1.visibleFrame.midX })
+    case .up:
+        // AppKit y increases upward, so "above" = larger midY
+        return screens
+            .filter { $0.visibleFrame.midY > currentVF.midY }
+            .min(by: { $0.visibleFrame.midY < $1.visibleFrame.midY })
+    case .down:
+        return screens
+            .filter { $0.visibleFrame.midY < currentVF.midY }
+            .max(by: { $0.visibleFrame.midY < $1.visibleFrame.midY })
+    }
+}
+
+/// Returns true when two AX-coordinate rects are within `tolerance` pixels on
+/// every dimension. Used to detect when a window is already at its snap target.
+func rectsMatch(_ a: CGRect, _ b: CGRect, tolerance: CGFloat = 2) -> Bool {
+    abs(a.origin.x    - b.origin.x)    <= tolerance &&
+    abs(a.origin.y    - b.origin.y)    <= tolerance &&
+    abs(a.size.width  - b.size.width)  <= tolerance &&
+    abs(a.size.height - b.size.height) <= tolerance
+}
+
 // MARK: - Screen detection
 
 /// Returns the visibleFrame of the screen that contains `axPoint`.

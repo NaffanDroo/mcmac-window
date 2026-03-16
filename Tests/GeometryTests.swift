@@ -7,10 +7,9 @@ private func target(_ action: WindowAction, origin: CGPoint = .zero) -> CGRect {
     computeTargetRect(action: action, visibleFrame: vf, primaryScreenHeight: ph, currentAXOrigin: origin)
 }
 
-func geometryTests() -> [Test] { [
+// MARK: - Sub-suites (each well under the 300-line body limit)
 
-    // MARK: axRect()
-
+private func axRectTests() -> [Test] { [
     Test("axRect: primary visibleFrame → AX origin y=37") {
         let r = axRect(from: vf, primaryScreenHeight: ph)
         assertEq(r.origin.x, 0, "x"); assertEq(r.origin.y, 37, "y")
@@ -33,9 +32,10 @@ func geometryTests() -> [Test] { [
         let r = axRect(from: CGRect(x: 100, y: 200, width: 800, height: 600), primaryScreenHeight: ph)
         assertEq(r.width, 800); assertEq(r.height, 600)
     },
+] }
 
-    // MARK: halves
-
+private func snapActionTests() -> [Test] { [
+    // halves
     Test("leftHalf: x=0, y=37, w=960, h=1043") {
         let r = target(.leftHalf)
         assertEq(r.origin.x, 0, "x"); assertEq(r.origin.y, 37, "y")
@@ -48,17 +48,15 @@ func geometryTests() -> [Test] { [
     },
     Test("topHalf: x=0, y=37, w=1920, h=521.5") {
         let r = target(.topHalf)
-        assertEq(r.origin.x, 0, "x");   assertEq(r.origin.y, 37, "y")
-        assertEq(r.width, 1920, "w");   assertEq(r.height, 521.5, "h")
+        assertEq(r.origin.x, 0, "x");  assertEq(r.origin.y, 37, "y")
+        assertEq(r.width, 1920, "w");  assertEq(r.height, 521.5, "h")
     },
     Test("bottomHalf: x=0, y=558.5, w=1920, h=521.5") {
         let r = target(.bottomHalf)
-        assertEq(r.origin.x, 0, "x");    assertEq(r.origin.y, 558.5, "y")
-        assertEq(r.width, 1920, "w");    assertEq(r.height, 521.5, "h")
+        assertEq(r.origin.x, 0, "x");   assertEq(r.origin.y, 558.5, "y")
+        assertEq(r.width, 1920, "w");   assertEq(r.height, 521.5, "h")
     },
-
-    // MARK: quarters
-
+    // quarters
     Test("topLeft: x=0, y=37, w=960, h=521.5") {
         let r = target(.topLeft)
         assertEq(r.origin.x, 0, "x");  assertEq(r.origin.y, 37, "y")
@@ -79,9 +77,7 @@ func geometryTests() -> [Test] { [
         assertEq(r.origin.x, 960, "x");  assertEq(r.origin.y, 558.5, "y")
         assertEq(r.width, 960, "w");     assertEq(r.height, 521.5, "h")
     },
-
-    // MARK: maximize & center
-
+    // maximize & center
     Test("maximize fills the entire visibleFrame") {
         let r = target(.maximize)
         assertEq(r.origin.x, 0, "x"); assertEq(r.origin.y, 37, "y")
@@ -95,9 +91,7 @@ func geometryTests() -> [Test] { [
         assertEq(r.origin.x, (1920 - tw) / 2,       tol: 0.01, "x")
         assertEq(r.origin.y, 37 + (1043 - th) / 2,  tol: 0.01, "y")
     },
-
-    // MARK: thirds cycling
-
+    // thirds cycling
     Test("nextThirdRight from left → center (x=640)") {
         let r = target(.nextThirdRight, origin: CGPoint(x: 0, y: 37))
         assertEq(r.origin.x, 640, "x"); assertEq(r.origin.y, 37, "y")
@@ -121,46 +115,7 @@ func geometryTests() -> [Test] { [
     Test("thirds midpoint tie (x=320): earlier slot wins → nextRight=640") {
         assertEq(target(.nextThirdRight, origin: CGPoint(x: 320, y: 37)).origin.x, 640)
     },
-
-    // MARK: screenContaining()
-
-    Test("screenContaining: point in primary screen") {
-        let p = ScreenInfo(frame: CGRect(x: 0,    y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 0,    y: 0, width: 1920, height: 1043))
-        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
-        assertEq(screenContaining(axPoint: CGPoint(x: 100, y: 50), screens: [p, s], primaryScreenHeight: ph), p.visibleFrame)
-    },
-    Test("screenContaining: point in secondary screen") {
-        let p = ScreenInfo(frame: CGRect(x: 0,    y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 0,    y: 0, width: 1920, height: 1043))
-        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
-        assertEq(screenContaining(axPoint: CGPoint(x: 2000, y: 50), screens: [p, s], primaryScreenHeight: ph), s.visibleFrame)
-    },
-    Test("screenContaining: x=1920 boundary belongs to secondary, not primary") {
-        let p = ScreenInfo(frame: CGRect(x: 0,    y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 0,    y: 0, width: 1920, height: 1043))
-        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
-        assertEq(screenContaining(axPoint: CGPoint(x: 1920, y: 50), screens: [p, s], primaryScreenHeight: ph), s.visibleFrame)
-    },
-    Test("screenContaining: off-screen point falls back to first screen") {
-        let p = ScreenInfo(frame: CGRect(x: 0,    y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 0,    y: 0, width: 1920, height: 1043))
-        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
-                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
-        assertEq(screenContaining(axPoint: CGPoint(x: -999, y: 50), screens: [p, s], primaryScreenHeight: ph), p.visibleFrame)
-    },
-    Test("screenContaining: single monitor always matches") {
-        let single = [ScreenInfo(frame: CGRect(x: 0, y: 0, width: 2560, height: 1600),
-                                 visibleFrame: CGRect(x: 0, y: 25, width: 2560, height: 1552))]
-        assertEq(screenContaining(axPoint: CGPoint(x: 1000, y: 200), screens: single, primaryScreenHeight: 1600),
-                 single[0].visibleFrame)
-    },
-
-    // MARK: two thirds
-
+    // two thirds
     Test("leftTwoThirds: x=0, y=37, w=1280, h=1043") {
         let r = target(.leftTwoThirds)
         assertEq(r.origin.x, 0,    "x"); assertEq(r.origin.y, 37,   "y")
@@ -173,8 +128,7 @@ func geometryTests() -> [Test] { [
     },
     Test("leftTwoThirds + rightTwoThirds overlap by exactly one third") {
         let L = target(.leftTwoThirds); let R = target(.rightTwoThirds)
-        let overlap = L.maxX - R.minX
-        assertEq(overlap, vf.width / 3, tol: 0.001, "overlap width")
+        assertEq(L.maxX - R.minX, vf.width / 3, tol: 0.001, "overlap width")
     },
     Test("leftTwoThirds left-aligns with visibleFrame") {
         assertEq(target(.leftTwoThirds).origin.x, axRect(from: vf, primaryScreenHeight: ph).minX)
@@ -184,9 +138,202 @@ func geometryTests() -> [Test] { [
         let ax = axRect(from: vf, primaryScreenHeight: ph)
         assertEq(r.maxX, ax.maxX, tol: 0.001, "right edge")
     },
+] }
 
-    // MARK: non-regression
+private func screenContainingTests() -> [Test] { [
+    Test("screenContaining: point in primary screen") {
+        let p = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 0, width: 1920, height: 1043))
+        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
+        assertEq(screenContaining(axPoint: CGPoint(x: 100, y: 50), screens: [p, s], primaryScreenHeight: ph), p.visibleFrame)
+    },
+    Test("screenContaining: point in secondary screen") {
+        let p = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 0, width: 1920, height: 1043))
+        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
+        assertEq(screenContaining(axPoint: CGPoint(x: 2000, y: 50), screens: [p, s], primaryScreenHeight: ph), s.visibleFrame)
+    },
+    Test("screenContaining: x=1920 boundary belongs to secondary, not primary") {
+        let p = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 0, width: 1920, height: 1043))
+        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
+        assertEq(screenContaining(axPoint: CGPoint(x: 1920, y: 50), screens: [p, s], primaryScreenHeight: ph), s.visibleFrame)
+    },
+    Test("screenContaining: off-screen point falls back to first screen") {
+        let p = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 0, width: 1920, height: 1043))
+        let s = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1043))
+        assertEq(screenContaining(axPoint: CGPoint(x: -999, y: 50), screens: [p, s], primaryScreenHeight: ph), p.visibleFrame)
+    },
+    Test("screenContaining: single monitor always matches") {
+        let single = [ScreenInfo(frame: CGRect(x: 0, y: 0, width: 2560, height: 1600),
+                                 visibleFrame: CGRect(x: 0, y: 25, width: 2560, height: 1552))]
+        assertEq(screenContaining(axPoint: CGPoint(x: 1000, y: 200), screens: single, primaryScreenHeight: 1600),
+                 single[0].visibleFrame)
+    },
+] }
 
+// Three-screen layout used by push-through tests (AppKit coords, A is primary):
+//   A: frame=(0,0,1920,1080)    visibleFrame=(0,23,1920,1057)  — has menu bar
+//   B: frame=(1920,0,1920,1080) visibleFrame=(1920,0,1920,1080)
+//   C: frame=(3840,0,1920,1080) visibleFrame=(3840,0,1920,1080)
+private func pushThroughTests() -> [Test] { [
+    // adjacentScreen()
+    Test("adjacentScreen: left of B returns A") {
+        let A = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 23, width: 1920, height: 1057))
+        let B = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y:  0, width: 1920, height: 1080))
+        let C = ScreenInfo(frame: CGRect(x: 3840, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 3840, y:  0, width: 1920, height: 1080))
+        assertEq(adjacentScreen(to: B.visibleFrame, direction: .left, among: [A, B, C])?.visibleFrame ?? .zero,
+                 A.visibleFrame, "should return screen A")
+    },
+    Test("adjacentScreen: right of B returns C") {
+        let A = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 23, width: 1920, height: 1057))
+        let B = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y:  0, width: 1920, height: 1080))
+        let C = ScreenInfo(frame: CGRect(x: 3840, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 3840, y:  0, width: 1920, height: 1080))
+        assertEq(adjacentScreen(to: B.visibleFrame, direction: .right, among: [A, B, C])?.visibleFrame ?? .zero,
+                 C.visibleFrame, "should return screen C")
+    },
+    Test("adjacentScreen: no screen to the left of leftmost") {
+        let A = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 23, width: 1920, height: 1057))
+        let B = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y:  0, width: 1920, height: 1080))
+        assertTrue(adjacentScreen(to: A.visibleFrame, direction: .left, among: [A, B]) == nil,
+                   "leftmost screen has no left neighbour")
+    },
+    Test("adjacentScreen: no screen to the right of rightmost") {
+        let A = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x:    0, y: 23, width: 1920, height: 1057))
+        let B = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 1920, y:  0, width: 1920, height: 1080))
+        assertTrue(adjacentScreen(to: B.visibleFrame, direction: .right, among: [A, B]) == nil,
+                   "rightmost screen has no right neighbour")
+    },
+    Test("adjacentScreen: single screen has no neighbours") {
+        let A = ScreenInfo(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080),
+                           visibleFrame: CGRect(x: 0, y: 23, width: 1920, height: 1057))
+        assertTrue(adjacentScreen(to: A.visibleFrame, direction: .left,  among: [A]) == nil)
+        assertTrue(adjacentScreen(to: A.visibleFrame, direction: .right, among: [A]) == nil)
+    },
+    // pushThrough(for:)
+    Test("pushThrough: leftHalf → rightHalf going left") {
+        let pt = pushThrough(for: .leftHalf)
+        assertTrue(pt?.action == .rightHalf, "mirror action"); assertTrue(pt?.direction == .left, "direction")
+    },
+    Test("pushThrough: rightHalf → leftHalf going right") {
+        let pt = pushThrough(for: .rightHalf)
+        assertTrue(pt?.action == .leftHalf, "mirror action"); assertTrue(pt?.direction == .right, "direction")
+    },
+    Test("pushThrough: topHalf → bottomHalf going up") {
+        let pt = pushThrough(for: .topHalf)
+        assertTrue(pt?.action == .bottomHalf, "mirror action"); assertTrue(pt?.direction == .up, "direction")
+    },
+    Test("pushThrough: bottomHalf → topHalf going down") {
+        let pt = pushThrough(for: .bottomHalf)
+        assertTrue(pt?.action == .topHalf, "mirror action"); assertTrue(pt?.direction == .down, "direction")
+    },
+    Test("pushThrough: topLeft → topRight going left") {
+        let pt = pushThrough(for: .topLeft)
+        assertTrue(pt?.action == .topRight, "mirror action"); assertTrue(pt?.direction == .left, "direction")
+    },
+    Test("pushThrough: topRight → topLeft going right") {
+        let pt = pushThrough(for: .topRight)
+        assertTrue(pt?.action == .topLeft, "mirror action"); assertTrue(pt?.direction == .right, "direction")
+    },
+    Test("pushThrough: bottomLeft → bottomRight going left") {
+        let pt = pushThrough(for: .bottomLeft)
+        assertTrue(pt?.action == .bottomRight, "mirror"); assertTrue(pt?.direction == .left, "direction")
+    },
+    Test("pushThrough: bottomRight → bottomLeft going right") {
+        let pt = pushThrough(for: .bottomRight)
+        assertTrue(pt?.action == .bottomLeft, "mirror"); assertTrue(pt?.direction == .right, "direction")
+    },
+    Test("pushThrough: leftTwoThirds → rightTwoThirds going left") {
+        let pt = pushThrough(for: .leftTwoThirds)
+        assertTrue(pt?.action == .rightTwoThirds, "mirror"); assertTrue(pt?.direction == .left, "direction")
+    },
+    Test("pushThrough: rightTwoThirds → leftTwoThirds going right") {
+        let pt = pushThrough(for: .rightTwoThirds)
+        assertTrue(pt?.action == .leftTwoThirds, "mirror"); assertTrue(pt?.direction == .right, "direction")
+    },
+    Test("pushThrough: maximize returns nil (no push-through)") {
+        assertTrue(pushThrough(for: .maximize) == nil)
+    },
+    Test("pushThrough: center returns nil (no push-through)") {
+        assertTrue(pushThrough(for: .center) == nil)
+    },
+    Test("pushThrough: nextThirdLeft returns nil (cycles within screen)") {
+        assertTrue(pushThrough(for: .nextThirdLeft) == nil)
+    },
+    // rectsMatch()
+    Test("rectsMatch: identical rects match") {
+        assertTrue(rectsMatch(CGRect(x: 10, y: 20, width: 960, height: 540),
+                              CGRect(x: 10, y: 20, width: 960, height: 540)))
+    },
+    Test("rectsMatch: rects within 2px tolerance match") {
+        assertTrue(rectsMatch(CGRect(x: 10, y: 20, width: 960, height: 540),
+                              CGRect(x: 11, y: 21, width: 961, height: 539), tolerance: 2))
+    },
+    Test("rectsMatch: rects beyond tolerance do not match") {
+        assertTrue(!rectsMatch(CGRect(x: 10, y: 20, width: 960, height: 540),
+                               CGRect(x: 14, y: 20, width: 960, height: 540), tolerance: 2))
+    },
+    // Target rect on adjacent screen
+    Test("push-through leftHalf of B → rightHalf of A: correct AX rect") {
+        let ptPh: CGFloat = 1080
+        let screenA = ScreenInfo(frame: CGRect(x:    0, y: 0, width: 1920, height: 1080),
+                                 visibleFrame: CGRect(x:    0, y: 23, width: 1920, height: 1057))
+        let screenB = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                                 visibleFrame: CGRect(x: 1920, y:  0, width: 1920, height: 1080))
+        let screenC = ScreenInfo(frame: CGRect(x: 3840, y: 0, width: 1920, height: 1080),
+                                 visibleFrame: CGRect(x: 3840, y:  0, width: 1920, height: 1080))
+        let leftHalfB = computeTargetRect(action: .leftHalf, visibleFrame: screenB.visibleFrame,
+                                          primaryScreenHeight: ptPh, currentAXOrigin: .zero)
+        guard let pt = pushThrough(for: .leftHalf) else {
+            assertTrue(false, "pushThrough(for: .leftHalf) should not be nil"); return
+        }
+        let neighbor = adjacentScreen(to: screenB.visibleFrame, direction: pt.direction,
+                                      among: [screenA, screenB, screenC])
+        assertTrue(neighbor?.visibleFrame == screenA.visibleFrame, "adjacent screen is A")
+        let pushTarget = computeTargetRect(action: pt.action, visibleFrame: screenA.visibleFrame,
+                                           primaryScreenHeight: ptPh, currentAXOrigin: leftHalfB.origin)
+        assertEq(pushTarget.origin.x, 960,  tol: 0.001, "x")
+        assertEq(pushTarget.origin.y, 0,    tol: 0.001, "y")
+        assertEq(pushTarget.width,    960,  tol: 0.001, "w")
+        assertEq(pushTarget.height,   1057, tol: 0.001, "h")
+    },
+    Test("push-through rightHalf of B → leftHalf of C: correct AX rect") {
+        let ptPh: CGFloat = 1080
+        let screenB = ScreenInfo(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080),
+                                 visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1080))
+        let screenC = ScreenInfo(frame: CGRect(x: 3840, y: 0, width: 1920, height: 1080),
+                                 visibleFrame: CGRect(x: 3840, y: 0, width: 1920, height: 1080))
+        guard let pt = pushThrough(for: .rightHalf) else {
+            assertTrue(false, "pushThrough(for: .rightHalf) should not be nil"); return
+        }
+        let neighbor = adjacentScreen(to: screenB.visibleFrame, direction: pt.direction,
+                                      among: [screenB, screenC])
+        assertTrue(neighbor?.visibleFrame == screenC.visibleFrame, "adjacent screen is C")
+        let pushTarget = computeTargetRect(action: pt.action, visibleFrame: screenC.visibleFrame,
+                                           primaryScreenHeight: ptPh, currentAXOrigin: .zero)
+        assertEq(pushTarget.origin.x, 3840, tol: 0.001, "x")
+        assertEq(pushTarget.origin.y, 0,    tol: 0.001, "y")
+        assertEq(pushTarget.width,    960,  tol: 0.001, "w")
+        assertEq(pushTarget.height,   1080, tol: 0.001, "h")
+    },
+] }
+
+private func nonRegressionTests() -> [Test] { [
     Test("left + right halves touch with no gap, sum to full width") {
         let L = target(.leftHalf); let R = target(.rightHalf)
         assertEq(L.width + R.width, vf.width, "total width")
@@ -207,5 +354,14 @@ func geometryTests() -> [Test] { [
     Test("three thirds widths sum to full visibleFrame width") {
         assertEq(vf.width / 3 * 3, vf.width)
     },
-
 ] }
+
+// MARK: - Entry point
+
+func geometryTests() -> [Test] {
+    axRectTests()
+    + snapActionTests()
+    + screenContainingTests()
+    + pushThroughTests()
+    + nonRegressionTests()
+}
