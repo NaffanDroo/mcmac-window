@@ -19,6 +19,16 @@ open mcmac-window.app
 
 Grant **Accessibility** permission when prompted (System Settings → Privacy & Security → Accessibility), then relaunch.
 
+### Accessibility permission after a rebuild
+
+Each rebuild produces a new binary with a different code signature. macOS ties the Accessibility permission to the signature, so rebuilding invalidates the old grant and hotkeys stop working. If that happens:
+
+```bash
+tccutil reset Accessibility com.example.mcmac-window
+```
+
+Then relaunch the app — it will prompt for permission again. If it doesn't prompt, run `./run.sh` to force a fresh launch.
+
 ## Keyboard Shortcuts
 
 | Keys | Action |
