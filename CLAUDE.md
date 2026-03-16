@@ -5,6 +5,7 @@ A lightweight macOS window manager built in pure Swift with zero external depend
 ## Build & Run
 
 ```bash
+./setup.sh          # one-time: installs pre-commit + SwiftLint + git hooks
 ./build.sh          # release build → mcmac-window.app
 ./build.sh --debug  # debug build with -Onone -g
 ./run.sh            # kill existing instance, rebuild if stale, relaunch
@@ -12,9 +13,21 @@ A lightweight macOS window manager built in pure Swift with zero external depend
 open mcmac-window.app
 ```
 
-Requirements: macOS 13+, Xcode Command Line Tools (`xcode-select --install`).
+Requirements: macOS 13+, Xcode Command Line Tools (`xcode-select --install`), Homebrew.
 
 The build is a **single `swiftc` invocation** — no Xcode project, no SPM, no external dependencies. Do not introduce either without explicit approval.
+
+## Local Hooks (pre-commit)
+
+`./setup.sh` installs three git hooks via the [pre-commit](https://pre-commit.com) framework:
+
+| Stage | Hook | What it does |
+|-------|------|-------------|
+| `commit-msg` | `conventional-pre-commit` | Rejects commit messages that don't follow Conventional Commits format |
+| `pre-commit` | `swiftlint --strict` | Lints staged `.swift` files against `.swiftlint.yml` |
+| `pre-push` | build + warnings-as-errors + test | Full pipeline mirror of CI — catches failures before they reach the remote |
+
+Run all hooks manually: `pre-commit run --all-files`
 
 ## Project Structure
 

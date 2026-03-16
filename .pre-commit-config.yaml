@@ -1,0 +1,43 @@
+repos:
+  # ── Conventional Commits (commit-msg stage) ──────────────────────────────
+  # Validates commit messages match the format required by release-please.
+  # Allowed types: feat  fix  perf  refactor  docs  test  chore
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, perf, refactor, docs, test, chore]
+
+  # ── SwiftLint (pre-commit stage) ─────────────────────────────────────────
+  # Lints staged Swift files. Mirrors the lint.yml CI workflow.
+  - repo: https://github.com/nicklockwood/SwiftLint
+    rev: 0.57.1
+    hooks:
+      - id: swiftlint
+        args: [--strict, --config, .swiftlint.yml]
+
+  # ── Build + Test (pre-push stage) ────────────────────────────────────────
+  # Mirrors the full CI pipeline so broken builds never reach the remote.
+  - repo: local
+    hooks:
+      - id: build
+        name: Build (release)
+        entry: bash build.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: build-warnings-as-errors
+        name: Build (warnings as errors)
+        entry: bash build.sh --warnings-as-errors
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      - id: test
+        name: Test suite
+        entry: bash test.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
