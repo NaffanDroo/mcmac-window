@@ -1,0 +1,36 @@
+name: Lint PR Title
+
+# Enforces Conventional Commits format on PR titles.
+# GitHub uses the PR title as the squash-merge commit message, so this
+# ensures the main-branch history stays machine-readable for release-please.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-pr-title:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Types that map to changelog sections in release-please-config.json
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            docs
+            test
+            chore
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The PR title must start with a lowercase letter.
+            Example: "feat: add top-right quarter snap"

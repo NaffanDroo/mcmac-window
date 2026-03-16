@@ -70,8 +70,7 @@ class WindowMover {
             mlog("AXUIElementCopyAttributeValue(kAXFocusedWindowAttribute) failed — AXError \(result.rawValue) (likely no Accessibility permission)")
             return nil
         }
-        guard let win = ref else { return nil }
-        return (win as! AXUIElement)
+        return ref as? AXUIElement
     }
 
     // MARK: - AX read/write (internal for tests)

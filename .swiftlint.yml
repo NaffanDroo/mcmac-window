@@ -1,0 +1,48 @@
+included:
+  - Sources
+  - Tests
+
+excluded: []
+
+# Rules enabled by default that we keep:
+# - trailing_newline, leading_whitespace, return_arrow_whitespace,
+#   colon, comma, statement_position, etc.
+
+disabled_rules:
+  - todo                   # TODOs are acceptable in source comments
+
+opt_in_rules:
+  - array_init
+  - closure_spacing
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - force_unwrapping        # flag ! unwraps; use guard/if-let instead
+  - implicit_return
+  - operator_usage_whitespace
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+
+# Thresholds — kept generous for a small codebase but enforced above these limits
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 250
+  error: 350
+
+function_body_length:
+  warning: 60
+  error: 100
+
+file_length:
+  warning: 400
+  error: 600
