@@ -22,6 +22,7 @@ repos:
         language: system
         entry: swiftlint lint --strict --config .swiftlint.yml
         types: [swift]
+        stages: [commit]
 
       # ── pre-push: full build + test pipeline ────────────────────────────
       - id: build
