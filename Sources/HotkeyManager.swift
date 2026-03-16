@@ -60,7 +60,7 @@ class HotkeyManager {
         Binding(keyCode: Key.leftArrow,  carbonMods: C|O|Cm|S,  action: .nextThirdLeft,   display: "⌃⌥⌘⇧ ←   Third Left"),
         Binding(keyCode: Key.rightArrow, carbonMods: C|O|Cm|S,  action: .nextThirdRight,  display: "⌃⌥⌘⇧ →   Third Right"),
         Binding(keyCode: Key.upArrow,    carbonMods: C|O|Cm,    action: .leftTwoThirds,   display: "⌃⌥⌘ ↑     Left Two Thirds"),
-        Binding(keyCode: Key.downArrow,  carbonMods: C|O|Cm,    action: .rightTwoThirds,  display: "⌃⌥⌘ ↓     Right Two Thirds")
+        Binding(keyCode: Key.downArrow,  carbonMods: C|O|Cm,    action: .rightTwoThirds,  display: "⌃⌥⌘ ↓     Right Two Thirds"),
     ]
 
     func register() {
