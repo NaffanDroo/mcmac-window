@@ -69,7 +69,9 @@ Then relaunch mcmac-window.
                 alert.addButton(withTitle: "Later")
                 NSApp.activate(ignoringOtherApps: true)
                 if alert.runModal() == .alertFirstButtonReturn {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         }
