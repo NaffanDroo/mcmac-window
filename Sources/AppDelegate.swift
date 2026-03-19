@@ -4,18 +4,28 @@ import ApplicationServices
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem?
+    private var accessibilityMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
-        checkAccessibilityPermission()
         HotkeyManager.shared.register()
+        // Silently prompt the OS permission sheet (no custom alert).
+        // kAXTrustedCheckOptionPrompt triggers the system sheet only when
+        // permission has never been granted; it is a no-op once trusted.
+        AXIsProcessTrustedWithOptions(
+            [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        )
+        updateAccessibilityMenuItem()
     }
+
+    // MARK: - Status item
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem?.button {
-            if let img = NSImage(systemSymbolName: "rectangle.3.group", accessibilityDescription: "mcmac-window") {
+            if let img = NSImage(systemSymbolName: "rectangle.3.group",
+                                 accessibilityDescription: "mcmac-window") {
                 img.isTemplate = true
                 button.image = img
             } else {
@@ -25,20 +35,94 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
+        menu.delegate = self
 
         let titleItem = NSMenuItem(title: "mcmac-window", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         menu.addItem(.separator())
 
-        let shortcutsItem = NSMenuItem(title: "Shortcuts…", action: #selector(showShortcuts), keyEquivalent: "")
+        // Accessibility status + request
+        let axItem = NSMenuItem(title: "", action: #selector(requestAccessibility), keyEquivalent: "")
+        axItem.target = self
+        menu.addItem(axItem)
+        accessibilityMenuItem = axItem
+
+        // Reset permission
+        let resetItem = NSMenuItem(title: "Reset Accessibility Permission…",
+                                   action: #selector(resetAccessibility), keyEquivalent: "")
+        resetItem.target = self
+        menu.addItem(resetItem)
+        menu.addItem(.separator())
+
+        let shortcutsItem = NSMenuItem(title: "Shortcuts…",
+                                       action: #selector(showShortcuts), keyEquivalent: "")
         shortcutsItem.target = self
         menu.addItem(shortcutsItem)
         menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit",
+                                action: #selector(NSApplication.terminate(_:)),
+                                keyEquivalent: "q"))
         statusItem?.menu = menu
     }
+
+    // MARK: - Accessibility
+
+    private func isAccessibilityTrusted() -> Bool {
+        AXIsProcessTrustedWithOptions(nil)
+    }
+
+    private func updateAccessibilityMenuItem() {
+        if isAccessibilityTrusted() {
+            accessibilityMenuItem?.title = "✓ Accessibility Enabled"
+            accessibilityMenuItem?.action = nil          // not tappable when already granted
+        } else {
+            accessibilityMenuItem?.title = "⚠ Enable Accessibility…"
+            accessibilityMenuItem?.action = #selector(requestAccessibility)
+        }
+    }
+
+    @objc private func requestAccessibility() {
+        // Trigger the system permission sheet.
+        AXIsProcessTrustedWithOptions(
+            [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        )
+        // Open System Settings in case the sheet doesn't appear (e.g. already denied).
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc private func resetAccessibility() {
+        let alert = NSAlert()
+        alert.messageText = "Reset Accessibility Permission?"
+        alert.informativeText = """
+Removes the current Accessibility grant for mcmac-window so you can re-authorise it from scratch.
+
+The app will relaunch automatically and prompt for permission again.
+"""
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Reset & Relaunch")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let task = Process()
+        task.launchPath = "/usr/bin/tccutil"
+        task.arguments  = ["reset", "Accessibility", "com.example.mcmac-window"]
+        try? task.run()
+        task.waitUntilExit()
+
+        // Relaunch so macOS can issue a fresh permission prompt.
+        let url = Bundle.main.bundleURL
+        let cfg = NSWorkspace.OpenConfiguration()
+        cfg.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: url, configuration: cfg) { _, _ in }
+        NSApp.terminate(nil)
+    }
+
+    // MARK: - Shortcuts panel
 
     @objc private func showShortcuts() {
         let alert = NSAlert()
@@ -49,31 +133,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }
+}
 
-    private func checkAccessibilityPermission() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        if !AXIsProcessTrustedWithOptions(options) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                let alert = NSAlert()
-                alert.messageText = "Accessibility Permission Required"
-                alert.informativeText = """
-mcmac-window needs Accessibility access to move and resize windows.
+// MARK: - NSMenuDelegate
 
-Please grant access in:
-System Settings → Privacy & Security → Accessibility
-
-Then relaunch mcmac-window.
-"""
-                alert.alertStyle = .warning
-                alert.addButton(withTitle: "Open System Settings")
-                alert.addButton(withTitle: "Later")
-                NSApp.activate(ignoringOtherApps: true)
-                if alert.runModal() == .alertFirstButtonReturn {
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
-        }
+extension AppDelegate: NSMenuDelegate {
+    // Refresh the accessibility status label each time the menu opens.
+    func menuWillOpen(_ menu: NSMenu) {
+        updateAccessibilityMenuItem()
     }
 }
