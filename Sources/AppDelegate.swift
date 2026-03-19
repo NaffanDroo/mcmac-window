@@ -114,11 +114,14 @@ The app will relaunch automatically and prompt for permission again.
         try? task.run()
         task.waitUntilExit()
 
-        // Relaunch so macOS can issue a fresh permission prompt.
-        let url = Bundle.main.bundleURL
-        let cfg = NSWorkspace.OpenConfiguration()
-        cfg.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: url, configuration: cfg) { _, _ in }
+        // Relaunch via an independent shell process so the open(1) command
+        // survives our own termination. NSWorkspace.openApplication is async
+        // and gets cancelled when NSApp.terminate fires before it completes.
+        let bundlePath = Bundle.main.bundleURL.path
+        let relaunch = Process()
+        relaunch.launchPath = "/bin/sh"
+        relaunch.arguments  = ["-c", "sleep 1 && open '\(bundlePath)'"]
+        try? relaunch.run()
         NSApp.terminate(nil)
     }
 
