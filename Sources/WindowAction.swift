@@ -9,8 +9,9 @@ enum WindowAction: String {
     case bottomRight    = "Bottom Right"
     case maximize       = "Maximize"
     case center         = "Center"
-    case nextThirdLeft   = "Next Third (Left)"
-    case nextThirdRight  = "Next Third (Right)"
+    case firstThird      = "First Third"
+    case centerThird     = "Center Third"
+    case lastThird       = "Last Third"
     case leftTwoThirds   = "Left Two Thirds"
     case rightTwoThirds  = "Right Two Thirds"
 }

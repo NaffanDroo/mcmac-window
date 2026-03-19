@@ -37,16 +37,17 @@ Then relaunch the app — it will prompt for permission again. If it doesn't pro
 | `⌃⌥ →` | Right half |
 | `⌃⌥ ↑` | Top half |
 | `⌃⌥ ↓` | Bottom half |
-| `⌃⌥⌘ ←` | Top-left quarter |
-| `⌃⌥⌘ →` | Top-right quarter |
-| `⌃⌥⇧ ←` | Bottom-left quarter |
-| `⌃⌥⇧ →` | Bottom-right quarter |
-| `⌃⌥⌘⇧ ←` | Cycle thirds left |
-| `⌃⌥⌘⇧ →` | Cycle thirds right |
-| `⌃⌥⌘ ↑` | Left two thirds |
-| `⌃⌥⌘ ↓` | Right two thirds |
+| `⌃⌥ U` | Top-left quarter |
+| `⌃⌥ I` | Top-right quarter |
+| `⌃⌥ J` | Bottom-left quarter |
+| `⌃⌥ K` | Bottom-right quarter |
+| `⌃⌥ D` | First third |
+| `⌃⌥ F` | Center third |
+| `⌃⌥ G` | Last third |
+| `⌃⌥ E` | Left two thirds |
+| `⌃⌥ T` | Right two thirds |
 | `⌃⌥ ↩` | Maximize |
-| `⌃⌥ Space` | Center (65% of screen) |
+| `⌃⌥ C` | Center (65% of screen) |
 
 All actions apply to the window on whichever screen it currently occupies.
 

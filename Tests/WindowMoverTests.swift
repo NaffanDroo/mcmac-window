@@ -90,17 +90,22 @@ func windowMoverTests() -> [Test] { [
         }
     },
 
-    Test("nextThirdRight: three cycles return window to starting x") {
+    Test("firstThird/centerThird/lastThird tile across full screen width") {
         guard !NSScreen.screens.isEmpty, let vf = NSScreen.main?.visibleFrame else { try skip("no screen") }
         let window = makeTestWindow(); defer { window.close() }
         guard let ax = findAXWindow(titled: window.title) else { try skip("no AX element") }
-        let ph = NSScreen.screens[0].frame.height
-        let leftAXY = ph - (vf.origin.y + vf.height)
-        WindowMover.shared.setFrame(CGRect(x: vf.origin.x, y: leftAXY, width: vf.width / 3, height: vf.height), on: ax)
-        pump(0.08)
-        let startX = window.frame.origin.x
-        for _ in 0..<3 { WindowMover.shared.moveWindow(ax, action: .nextThirdRight); pump(0.08) }
-        assertEq(window.frame.origin.x, startX, tol: 3, "after 3 right-cycles must return to start")
+        for action: WindowAction in [.firstThird, .centerThird, .lastThird] {
+            WindowMover.shared.moveWindow(ax, action: action); pump(0.08)
+            assertTrue(window.frame.size.width > 0, "\(action.rawValue) width > 0")
+        }
+        // All three widths should sum to the full visible width
+        WindowMover.shared.moveWindow(ax, action: .firstThird); pump(0.08)
+        let fw = window.frame.width
+        WindowMover.shared.moveWindow(ax, action: .centerThird); pump(0.08)
+        let cw = window.frame.width
+        WindowMover.shared.moveWindow(ax, action: .lastThird); pump(0.08)
+        let lw = window.frame.width
+        assertEq(fw + cw + lw, vf.width, tol: 3, "thirds sum to full width")
     },
 
 ] }
