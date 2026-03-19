@@ -28,7 +28,17 @@ private enum Key {
     static let downArrow:  UInt32 = 0x7D
     static let upArrow:    UInt32 = 0x7E
     static let `return`:   UInt32 = 0x24
-    static let space:      UInt32 = 0x31
+    // Letter keys (matches Rectangle's alternate-default shortcut set)
+    static let c: UInt32 = 0x08
+    static let d: UInt32 = 0x02
+    static let e: UInt32 = 0x0E
+    static let f: UInt32 = 0x03
+    static let g: UInt32 = 0x05
+    static let i: UInt32 = 0x22
+    static let j: UInt32 = 0x26
+    static let k: UInt32 = 0x28
+    static let t: UInt32 = 0x11
+    static let u: UInt32 = 0x20
 }
 
 private let C  = UInt32(controlKey)
@@ -46,21 +56,23 @@ class HotkeyManager {
     private var hotKeyRefs: [EventHotKeyRef?] = []
     private var eventHandlerRef: EventHandlerRef?
 
+    // Matches Rectangle's "alternate" default shortcut set (⌃⌥-based).
     private let bindings: [Binding] = [
-        Binding(keyCode: Key.leftArrow,  carbonMods: C|O,       action: .leftHalf,       display: "⌃⌥ ←      Left Half"),
-        Binding(keyCode: Key.rightArrow, carbonMods: C|O,       action: .rightHalf,      display: "⌃⌥ →      Right Half"),
-        Binding(keyCode: Key.upArrow,    carbonMods: C|O,       action: .topHalf,        display: "⌃⌥ ↑      Top Half"),
-        Binding(keyCode: Key.downArrow,  carbonMods: C|O,       action: .bottomHalf,     display: "⌃⌥ ↓      Bottom Half"),
-        Binding(keyCode: Key.leftArrow,  carbonMods: C|O|Cm,    action: .topLeft,        display: "⌃⌥⌘ ←     Top Left"),
-        Binding(keyCode: Key.rightArrow, carbonMods: C|O|Cm,    action: .topRight,       display: "⌃⌥⌘ →     Top Right"),
-        Binding(keyCode: Key.leftArrow,  carbonMods: C|O|S,     action: .bottomLeft,     display: "⌃⌥⇧ ←     Bottom Left"),
-        Binding(keyCode: Key.rightArrow, carbonMods: C|O|S,     action: .bottomRight,    display: "⌃⌥⇧ →     Bottom Right"),
-        Binding(keyCode: Key.return,     carbonMods: C|O,       action: .maximize,       display: "⌃⌥ ↩      Maximize"),
-        Binding(keyCode: Key.space,      carbonMods: C|O,       action: .center,         display: "⌃⌥ Space  Center"),
-        Binding(keyCode: Key.leftArrow,  carbonMods: C|O|Cm|S,  action: .nextThirdLeft,   display: "⌃⌥⌘⇧ ←   Third Left"),
-        Binding(keyCode: Key.rightArrow, carbonMods: C|O|Cm|S,  action: .nextThirdRight,  display: "⌃⌥⌘⇧ →   Third Right"),
-        Binding(keyCode: Key.upArrow,    carbonMods: C|O|Cm,    action: .leftTwoThirds,   display: "⌃⌥⌘ ↑     Left Two Thirds"),
-        Binding(keyCode: Key.downArrow,  carbonMods: C|O|Cm,    action: .rightTwoThirds,  display: "⌃⌥⌘ ↓     Right Two Thirds"),
+        Binding(keyCode: Key.leftArrow, carbonMods: C|O, action: .leftHalf,      display: "⌃⌥ ←   Left Half"),
+        Binding(keyCode: Key.rightArrow,carbonMods: C|O, action: .rightHalf,     display: "⌃⌥ →   Right Half"),
+        Binding(keyCode: Key.upArrow,   carbonMods: C|O, action: .topHalf,       display: "⌃⌥ ↑   Top Half"),
+        Binding(keyCode: Key.downArrow, carbonMods: C|O, action: .bottomHalf,    display: "⌃⌥ ↓   Bottom Half"),
+        Binding(keyCode: Key.u,         carbonMods: C|O, action: .topLeft,       display: "⌃⌥ U   Top Left"),
+        Binding(keyCode: Key.i,         carbonMods: C|O, action: .topRight,      display: "⌃⌥ I   Top Right"),
+        Binding(keyCode: Key.j,         carbonMods: C|O, action: .bottomLeft,    display: "⌃⌥ J   Bottom Left"),
+        Binding(keyCode: Key.k,         carbonMods: C|O, action: .bottomRight,   display: "⌃⌥ K   Bottom Right"),
+        Binding(keyCode: Key.return,    carbonMods: C|O, action: .maximize,      display: "⌃⌥ ↩   Maximize"),
+        Binding(keyCode: Key.c,         carbonMods: C|O, action: .center,        display: "⌃⌥ C   Center"),
+        Binding(keyCode: Key.d,         carbonMods: C|O, action: .firstThird,    display: "⌃⌥ D   First Third"),
+        Binding(keyCode: Key.f,         carbonMods: C|O, action: .centerThird,   display: "⌃⌥ F   Center Third"),
+        Binding(keyCode: Key.g,         carbonMods: C|O, action: .lastThird,     display: "⌃⌥ G   Last Third"),
+        Binding(keyCode: Key.e,         carbonMods: C|O, action: .leftTwoThirds, display: "⌃⌥ E   Left Two Thirds"),
+        Binding(keyCode: Key.t,         carbonMods: C|O, action: .rightTwoThirds,display: "⌃⌥ T   Right Two Thirds"),
     ]
 
     func register() {

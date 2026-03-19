@@ -34,7 +34,7 @@ func pushThrough(for action: WindowAction) -> (action: WindowAction, direction: 
     case .bottomRight:   return (.bottomLeft,    .right)
     case .leftTwoThirds: return (.rightTwoThirds, .left)
     case .rightTwoThirds:return (.leftTwoThirds,  .right)
-    case .maximize, .center, .nextThirdLeft, .nextThirdRight: return nil
+    case .maximize, .center, .firstThird, .centerThird, .lastThird: return nil
     }
 }
 
@@ -111,27 +111,10 @@ func computeTargetRect(
         let th = h * 0.65
         return CGRect(x: ax.minX + (w - tw) / 2, y: ax.minY + (h - th) / 2, width: tw, height: th)
 
-    case .nextThirdLeft:
-        return nextThirdRect(direction: -1, ax: ax, w: w, h: h, currentX: currentAXOrigin.x)
-    case .nextThirdRight:
-        return nextThirdRect(direction: +1, ax: ax, w: w, h: h, currentX: currentAXOrigin.x)
-
-    case .leftTwoThirds:  return CGRect(x: ax.minX,           y: ax.minY, width: w * 2 / 3, height: h)
-    case .rightTwoThirds: return CGRect(x: ax.minX + w / 3,   y: ax.minY, width: w * 2 / 3, height: h)
+    case .firstThird:    return CGRect(x: ax.minX,             y: ax.minY, width: w / 3,     height: h)
+    case .centerThird:   return CGRect(x: ax.minX + w / 3,     y: ax.minY, width: w / 3,     height: h)
+    case .lastThird:     return CGRect(x: ax.minX + w * 2 / 3, y: ax.minY, width: w / 3,     height: h)
+    case .leftTwoThirds: return CGRect(x: ax.minX,             y: ax.minY, width: w * 2 / 3, height: h)
+    case .rightTwoThirds:return CGRect(x: ax.minX + w / 3,     y: ax.minY, width: w * 2 / 3, height: h)
     }
-}
-
-private func nextThirdRect(direction: Int, ax: CGRect, w: CGFloat, h: CGFloat, currentX: CGFloat) -> CGRect {
-    let third = w / 3
-    let slots: [CGFloat] = [ax.minX, ax.minX + third, ax.minX + third * 2]
-
-    var currentSlot = 0
-    var minDist = abs(currentX - slots[0])
-    for (i, sx) in slots.enumerated() {
-        let d = abs(currentX - sx)
-        if d < minDist { minDist = d; currentSlot = i }
-    }
-
-    let nextSlot = (currentSlot + direction + 3) % 3
-    return CGRect(x: slots[nextSlot], y: ax.minY, width: third, height: h)
 }
