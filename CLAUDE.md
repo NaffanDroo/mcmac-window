@@ -148,22 +148,25 @@ This section documents rules that are especially easy for an AI to accidentally 
 
 ## Keyboard Shortcuts Reference
 
+Shortcuts match Rectangle's alternate-default (⌃⌥-based) set.
+
 | Keys | Action |
 |------|--------|
 | `⌃⌥ ←` | Left half |
 | `⌃⌥ →` | Right half |
 | `⌃⌥ ↑` | Top half |
 | `⌃⌥ ↓` | Bottom half |
-| `⌃⌥⌘ ←` | Top-left quarter |
-| `⌃⌥⌘ →` | Top-right quarter |
-| `⌃⌥⇧ ←` | Bottom-left quarter |
-| `⌃⌥⇧ →` | Bottom-right quarter |
-| `⌃⌥⌘⇧ ←` | Cycle thirds left |
-| `⌃⌥⌘⇧ →` | Cycle thirds right |
-| `⌃⌥⌘ ↑` | Left two thirds |
-| `⌃⌥⌘ ↓` | Right two thirds |
+| `⌃⌥ U` | Top-left quarter |
+| `⌃⌥ I` | Top-right quarter |
+| `⌃⌥ J` | Bottom-left quarter |
+| `⌃⌥ K` | Bottom-right quarter |
+| `⌃⌥ D` | First third |
+| `⌃⌥ F` | Center third |
+| `⌃⌥ G` | Last third |
+| `⌃⌥ E` | Left two thirds |
+| `⌃⌥ T` | Right two thirds |
 | `⌃⌥ ↩` | Maximize |
-| `⌃⌥ Space` | Center (65% of screen) |
+| `⌃⌥ C` | Center (65% of screen) |
 
 All actions apply to whichever screen the frontmost window currently occupies.
 
@@ -178,5 +181,5 @@ screen** in that direction. For example:
 - Middle screen, window at top-right quarter → press `⌃⌥⌘ →` again → top-left
   quarter of the right screen
 
-Actions without a directional mirror (`⌃⌥ ↩` maximize, `⌃⌥ Space` center,
-and the cycling thirds) do not push through.
+Actions without a directional mirror (`⌃⌥ ↩` maximize, `⌃⌥ C` center,
+and the static thirds) do not push through.

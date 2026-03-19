@@ -91,29 +91,21 @@ private func snapActionTests() -> [Test] { [
         assertEq(r.origin.x, (1920 - tw) / 2,       tol: 0.01, "x")
         assertEq(r.origin.y, 37 + (1043 - th) / 2,  tol: 0.01, "y")
     },
-    // thirds cycling
-    Test("nextThirdRight from left → center (x=640)") {
-        let r = target(.nextThirdRight, origin: CGPoint(x: 0, y: 37))
-        assertEq(r.origin.x, 640, "x"); assertEq(r.origin.y, 37, "y")
-        assertEq(r.width, 640, "w");    assertEq(r.height, 1043, "h")
+    // thirds (static — matches Rectangle's D/F/G shortcuts)
+    Test("firstThird: x=0, y=37, w=640, h=1043") {
+        let r = target(.firstThird)
+        assertEq(r.origin.x, 0,   "x"); assertEq(r.origin.y, 37,   "y")
+        assertEq(r.width, 640,    "w"); assertEq(r.height, 1043,   "h")
     },
-    Test("nextThirdRight from center → right (x=1280)") {
-        assertEq(target(.nextThirdRight, origin: CGPoint(x: 640, y: 37)).origin.x, 1280)
+    Test("centerThird: x=640, y=37, w=640, h=1043") {
+        let r = target(.centerThird)
+        assertEq(r.origin.x, 640, "x"); assertEq(r.origin.y, 37,   "y")
+        assertEq(r.width, 640,    "w"); assertEq(r.height, 1043,   "h")
     },
-    Test("nextThirdRight from right → wraps to left (x=0)") {
-        assertEq(target(.nextThirdRight, origin: CGPoint(x: 1280, y: 37)).origin.x, 0)
-    },
-    Test("nextThirdLeft from center → left (x=0)") {
-        assertEq(target(.nextThirdLeft, origin: CGPoint(x: 640, y: 37)).origin.x, 0)
-    },
-    Test("nextThirdLeft from left → wraps to right (x=1280)") {
-        assertEq(target(.nextThirdLeft, origin: CGPoint(x: 0, y: 37)).origin.x, 1280)
-    },
-    Test("thirds slot detection with drift: x=650 → slot 1 → right → x=1280") {
-        assertEq(target(.nextThirdRight, origin: CGPoint(x: 650, y: 37)).origin.x, 1280)
-    },
-    Test("thirds midpoint tie (x=320): earlier slot wins → nextRight=640") {
-        assertEq(target(.nextThirdRight, origin: CGPoint(x: 320, y: 37)).origin.x, 640)
+    Test("lastThird: x=1280, y=37, w=640, h=1043") {
+        let r = target(.lastThird)
+        assertEq(r.origin.x, 1280,"x"); assertEq(r.origin.y, 37,   "y")
+        assertEq(r.width, 640,    "w"); assertEq(r.height, 1043,   "h")
     },
     // two thirds
     Test("leftTwoThirds: x=0, y=37, w=1280, h=1043") {
@@ -272,8 +264,10 @@ private func pushThroughTests() -> [Test] { [
     Test("pushThrough: center returns nil (no push-through)") {
         assertTrue(pushThrough(for: .center) == nil)
     },
-    Test("pushThrough: nextThirdLeft returns nil (cycles within screen)") {
-        assertTrue(pushThrough(for: .nextThirdLeft) == nil)
+    Test("pushThrough: firstThird returns nil (no push-through for static thirds)") {
+        assertTrue(pushThrough(for: .firstThird) == nil)
+        assertTrue(pushThrough(for: .centerThird) == nil)
+        assertTrue(pushThrough(for: .lastThird) == nil)
     },
     // rectsMatch()
     Test("rectsMatch: identical rects match") {
@@ -351,8 +345,10 @@ private func nonRegressionTests() -> [Test] { [
         assertEq(tl.maxX, tr.minX, "top quarters touch horizontally")
         assertEq(tl.maxY, bl.minY, "quarters touch vertically")
     },
-    Test("three thirds widths sum to full visibleFrame width") {
-        assertEq(vf.width / 3 * 3, vf.width)
+    Test("three static thirds tile without gaps or overlaps") {
+        let f = target(.firstThird); let c = target(.centerThird); let l = target(.lastThird)
+        assertEq(f.width + c.width + l.width, vf.width, "total width")
+        assertEq(f.maxX, c.minX, "first→center touch"); assertEq(c.maxX, l.minX, "center→last touch")
     },
 ] }
 
