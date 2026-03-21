@@ -19,7 +19,7 @@ Inspired by [Rectangle](https://rectangleapp.com), built in pure Swift with a si
 
 ```bash
 ./build.sh
-open mcmac-window.app
+open McMac Window.app
 ```
 
 Grant **Accessibility** permission when prompted (System Settings → Privacy & Security → Accessibility), then relaunch.

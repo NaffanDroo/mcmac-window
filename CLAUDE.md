@@ -8,11 +8,11 @@ A lightweight macOS window manager built in pure Swift with zero external depend
 
 ```bash
 ./setup.sh          # one-time: installs pre-commit + SwiftLint + git hooks
-./build.sh          # release build → mcmac-window.app
+./build.sh          # release build → McMac Window.app
 ./build.sh --debug  # debug build with -Onone -g
 ./run.sh            # kill existing instance, rebuild if stale, relaunch
 ./test.sh           # compile and run the full test suite
-open mcmac-window.app
+open McMac Window.app
 ```
 
 Requirements: macOS 13+, Xcode Command Line Tools (`xcode-select --install`), Homebrew.
@@ -86,7 +86,7 @@ The entire app compiles with one `swiftc` line. Keep it that way.
 
 ### Code signing
 
-The bundle must be signed (even with ad-hoc `-`) so the bundle identifier (`org.nathandrew.mcmac-window`) matches the TCC entry macOS creates when the user enables Accessibility. `build.sh` does `codesign --force --sign - mcmac-window.app` automatically.
+The bundle must be signed (even with ad-hoc `-`) so the bundle identifier (`org.nathandrew.mcmac-window`) matches the TCC entry macOS creates when the user enables Accessibility. `build.sh` does `codesign --force --sign - McMac Window.app` automatically.
 
 ### Logging
 

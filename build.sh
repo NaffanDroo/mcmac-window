@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-BUNDLE="mcmac-window.app"
-BINARY_NAME="mcmac-window"
+BUNDLE="McMac Window.app"
+BINARY_NAME="McMac Window"
 SOURCES=(
     Sources/WindowAction.swift
     Sources/Geometry.swift
