@@ -38,5 +38,12 @@ jobs:
       - name: Test DMG
         run: ./scripts/test_dmg.sh
         # Verifies file presence, icon positions (via Finder AppleScript),
-        # volume kHasCustomIcon flag, and background image darkness.
+        # volume kHasCustomIcon flag, background image darkness, and
+        # kHasCustomIcon flag on the .dmg file itself.
         # Runs fully on macos-15 which provides a GUI session with Finder.
+
+      - name: Create zip
+        run: ditto -c -k --keepParent --rsrc mcmac-window.dmg mcmac-window.zip
+        # ditto with --rsrc embeds the resource fork so the DMG file icon
+        # (set by make_dmg.sh step 7) survives extraction on macOS via
+        # Archive Utility. This mirrors the release workflow packaging step.
