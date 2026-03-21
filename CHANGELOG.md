@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.1...v0.4.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* remove force-tag-creation to prevent spurious release PRs ([#29](https://github.com/NaffanDroo/mcmac-window/issues/29)) ([9b6d5b5](https://github.com/NaffanDroo/mcmac-window/commit/9b6d5b51c875ebc0c4564fe1d7ca447a93757b03))
+
 ## [0.4.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.0...v0.4.1) (2026-03-21)
 
 
