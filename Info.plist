@@ -4,15 +4,15 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>mcmac-window</string>
+    <string>McMac Window</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleName</key>
-    <string>mcmac-window</string>
+    <string>McMac Window</string>
     <key>CFBundleDisplayName</key>
-    <string>mcmac-window</string>
+    <string>McMac Window</string>
     <key>CFBundleIdentifier</key>
-    <string>com.example.mcmac-window</string>
+    <string>org.nathandrew.mcmac-window</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
@@ -22,6 +22,6 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSAccessibilityUsageDescription</key>
-    <string>mcmac-window needs Accessibility access to move and resize windows.</string>
+    <string>McMac Window needs Accessibility access to move and resize windows.</string>
 </dict>
 </plist>

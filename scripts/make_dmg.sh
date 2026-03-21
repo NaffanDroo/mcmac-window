@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-BUNDLE="mcmac-window.app"
+BUNDLE="McMac Window.app"
 APP_NAME="McMac Window.app"    # Display name used inside the DMG
 VOL_NAME="mcmac-window"
 DMG="${VOL_NAME}.dmg"

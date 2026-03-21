@@ -1,17 +1,8 @@
 import AppKit
 import ApplicationServices
+import OSLog
 
-private let logPath = "/tmp/mcmac-window.log"
-private func mlog(_ msg: String) {
-    let line = "\(Date()) \(msg)\n"
-    if let data = line.data(using: .utf8) {
-        if let handle = FileHandle(forWritingAtPath: logPath) {
-            handle.seekToEndOfFile(); handle.write(data); handle.closeFile()
-        } else {
-            FileManager.default.createFile(atPath: logPath, contents: data)
-        }
-    }
-}
+private let logger = Logger(subsystem: "org.nathandrew.mcmac-window", category: "WindowMover")
 
 class WindowMover {
 
@@ -21,25 +12,25 @@ class WindowMover {
     // MARK: - Public API
 
     func move(action: WindowAction) {
-        mlog("move(\(action.rawValue)) triggered")
+        logger.debug("move triggered: \(action.rawValue, privacy: .public)")
 
         guard !UserDefaults.standard.bool(forKey: "snappingPaused") else {
-            mlog("snapping paused — action skipped")
+            logger.info("snapping paused — action skipped")
             return
         }
 
         let ignoredIDs = UserDefaults.standard.stringArray(forKey: "ignoredBundleIDs") ?? []
         if let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
            ignoredIDs.contains(bundleID) {
-            mlog("app \(bundleID) is on ignore list — action skipped")
+            logger.info("app \(bundleID, privacy: .public) is on ignore list — action skipped")
             return
         }
 
         guard let window = focusedWindow() else {
-            mlog("focusedWindow() returned nil — AX permission likely missing or revoked")
+            logger.error("focusedWindow() returned nil — AX permission likely missing or revoked")
             return
         }
-        mlog("got focused window, calling moveWindow")
+        logger.debug("got focused window, calling moveWindow")
         moveWindow(window, action: action)
     }
 
@@ -64,14 +55,14 @@ class WindowMover {
            let neighbor = adjacentScreen(to: vf, direction: pt.direction, among: screens) {
             let pushTarget = computeTargetRect(action: pt.action, visibleFrame: neighbor.visibleFrame,
                                                primaryScreenHeight: ph, currentAXOrigin: axPos)
-            mlog("push-through: \(action.rawValue) → \(pt.action.rawValue) on adjacent screen")
+            logger.debug("push-through: \(action.rawValue, privacy: .public) → \(pt.action.rawValue, privacy: .public) on adjacent screen")
             setFrame(pushTarget, on: window)
             return
         }
 
-        mlog("setFrame \(target) on window")
+        logger.debug("setFrame \(target.debugDescription, privacy: .public)")
         setFrame(target, on: window)
-        mlog("setFrame complete")
+        logger.debug("setFrame complete")
     }
 
     // MARK: - Focused window
@@ -88,15 +79,16 @@ class WindowMover {
     /// this always returns the correct target app.
     private func focusedWindow() -> AXUIElement? {
         guard let app = NSWorkspace.shared.frontmostApplication else {
-            mlog("frontmostApplication is nil")
+            logger.info("frontmostApplication is nil")
             return nil
         }
-        mlog("frontmostApplication = \(app.bundleIdentifier ?? app.localizedName ?? "?") pid=\(app.processIdentifier)")
+        let appID = app.bundleIdentifier ?? app.localizedName ?? "?"
+        logger.debug("frontmostApplication = \(appID, privacy: .public) pid=\(app.processIdentifier)")
         let axApp = AXUIElementCreateApplication(app.processIdentifier)
         var ref: CFTypeRef?
         let result = AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref)
         if result != .success {
-            mlog("kAXFocusedWindowAttribute failed — AXError \(result.rawValue) (likely no AX permission)")
+            logger.error("kAXFocusedWindowAttribute failed — AXError \(result.rawValue) (likely no AX permission)")
             return nil
         }
         guard let win = ref else { return nil }

@@ -1,5 +1,5 @@
 # Build output
-mcmac-window.app/
+*.app/
 Tests/test_runner
 
 # Distribution artefacts

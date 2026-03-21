@@ -26,6 +26,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateAccessibilityMenuItem()
         // Restore paused-state icon on relaunch.
         statusItem?.button?.appearsDisabled = isSnappingPaused()
+        // One-time migration: remove the stale TCC entry from the old bundle ID
+        // (com.example.mcmac-window) so it no longer appears in System Settings.
+        if !UserDefaults.standard.bool(forKey: "legacyBundleIDCleaned") {
+            let cleanup = Process()
+            cleanup.launchPath = "/usr/bin/tccutil"
+            cleanup.arguments  = ["reset", "Accessibility", "com.example.mcmac-window"]
+            try? cleanup.run()
+            UserDefaults.standard.set(true, forKey: "legacyBundleIDCleaned")
+        }
     }
 
     // MARK: - Menu bar icon
@@ -64,13 +73,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem?.button {
             button.image = makeMenuBarImage()
-            button.toolTip = "mcmac-window"
+            button.toolTip = "McMac Window"
         }
 
         let menu = NSMenu()
         menu.delegate = self
 
-        let titleItem = NSMenuItem(title: "mcmac-window", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "McMac Window", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         menu.addItem(.separator())
@@ -116,6 +125,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(shortcutsItem)
         menu.addItem(.separator())
 
+        let openLogsItem = NSMenuItem(title: "Open Logs in Console…",
+                                      action: #selector(openLogsInConsole), keyEquivalent: "")
+        openLogsItem.target = self
+        menu.addItem(openLogsItem)
+
+        let exportLogsItem = NSMenuItem(title: "Export Logs…",
+                                        action: #selector(exportLogs), keyEquivalent: "")
+        exportLogsItem.target = self
+        menu.addItem(exportLogsItem)
+        menu.addItem(.separator())
+
         menu.addItem(NSMenuItem(title: "Quit",
                                 action: #selector(NSApplication.terminate(_:)),
                                 keyEquivalent: "q"))
@@ -153,7 +173,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Reset Accessibility Permission?"
         alert.informativeText = """
-Removes the current Accessibility grant for mcmac-window so you can re-authorise it from scratch.
+Removes the current Accessibility grant for McMac Window so you can re-authorise it from scratch.
 
 The app will relaunch automatically and prompt for permission again.
 """
@@ -165,7 +185,7 @@ The app will relaunch automatically and prompt for permission again.
 
         let task = Process()
         task.launchPath = "/usr/bin/tccutil"
-        task.arguments  = ["reset", "Accessibility", "com.example.mcmac-window"]
+        task.arguments  = ["reset", "Accessibility", "org.nathandrew.mcmac-window"]
         try? task.run()
         task.waitUntilExit()
 
@@ -271,11 +291,56 @@ The app will relaunch automatically and prompt for permission again.
         }
     }
 
-    // MARK: - Shortcuts panel
+}
 
-    @objc private func showShortcuts() {
+// MARK: - Logs
+
+extension AppDelegate {
+    @objc func openLogsInConsole() {
+        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"))
         let alert = NSAlert()
-        alert.messageText = "mcmac-window Shortcuts"
+        alert.messageText = "Filter by Subsystem"
+        alert.informativeText = "In Console, set the search filter to:\n\norg.nathandrew.mcmac-window"
+        alert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+
+    @objc func exportLogs() {
+        let panel = NSSavePanel()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        panel.nameFieldStringValue = "mcmac-window-\(formatter.string(from: Date())).log"
+        panel.title = "Export Logs"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let task = Process()
+        task.launchPath = "/usr/bin/log"
+        task.arguments = [
+            "show",
+            "--predicate", "subsystem == \"org.nathandrew.mcmac-window\"",
+            "--last", "1d",
+            "--info",
+            "--debug"
+        ]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = Pipe()
+        try? task.run()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        task.waitUntilExit()
+        try? data.write(to: url)
+        NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: "")
+    }
+}
+
+// MARK: - Shortcuts panel
+
+extension AppDelegate {
+    @objc func showShortcuts() {
+        let alert = NSAlert()
+        alert.messageText = "McMac Window Shortcuts"
         alert.informativeText = HotkeyManager.shared.shortcutDescriptions().joined(separator: "\n")
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")

@@ -6,7 +6,7 @@
 git clone https://github.com/NaffanDroo/mcmac-window.git
 cd mcmac-window
 ./setup.sh          # installs pre-commit, SwiftLint, and git hooks (one-time)
-./build.sh && open mcmac-window.app
+./build.sh && open McMac Window.app
 ./test.sh
 ```
 

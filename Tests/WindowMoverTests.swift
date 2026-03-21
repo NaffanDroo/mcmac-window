@@ -90,6 +90,16 @@ func windowMoverTests() -> [Test] { [
         }
     },
 
+    Test("logging: move() does not write to the legacy /tmp/mcmac-window.log file") {
+        // After the OSLog migration, all logging goes to the unified log.
+        // The flat file must not be created or modified.
+        let logPath = "/tmp/mcmac-window.log"
+        try? FileManager.default.removeItem(atPath: logPath)
+        WindowMover.shared.move(action: .leftHalf)
+        assertTrue(!FileManager.default.fileExists(atPath: logPath),
+                   "legacy flat-file log must not exist after OSLog migration")
+    },
+
     Test("move: action is skipped when snapping is paused") {
         guard NSScreen.main != nil else { try skip("no screen") }
         let window = makeTestWindow(); defer { window.close() }

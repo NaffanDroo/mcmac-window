@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-BUNDLE="mcmac-window.app"
-BINARY="$BUNDLE/Contents/MacOS/mcmac-window"
+BUNDLE="McMac Window.app"
+BINARY="$BUNDLE/Contents/MacOS/McMac Window"
 
-if pgrep -x "mcmac-window" > /dev/null 2>&1; then
+if pgrep -x "McMac Window" > /dev/null 2>&1; then
     echo "→ Stopping running instance…"
-    pkill -x "mcmac-window" || true
+    pkill -x "McMac Window" || true
     sleep 0.3
 fi
 

@@ -1,17 +1,8 @@
 import AppKit
 import Carbon
+import OSLog
 
-private let hkLogPath = "/tmp/mcmac-window.log"
-private func hlog(_ msg: String) {
-    let line = "\(Date()) [HK] \(msg)\n"
-    if let data = line.data(using: .utf8) {
-        if let handle = FileHandle(forWritingAtPath: hkLogPath) {
-            handle.seekToEndOfFile(); handle.write(data); handle.closeFile()
-        } else {
-            FileManager.default.createFile(atPath: hkLogPath, contents: data)
-        }
-    }
-}
+private let logger = Logger(subsystem: "org.nathandrew.mcmac-window", category: "HotkeyManager")
 
 // WindowAction is defined in WindowAction.swift (no Carbon dependency)
 
@@ -106,7 +97,7 @@ class HotkeyManager {
             1, &eventSpec, selfPtr, &eventHandlerRef
         )
 
-        hlog("registering \(bindings.count) hotkeys")
+        logger.info("registering \(self.bindings.count) hotkeys")
         for (index, binding) in bindings.enumerated() {
             let id = EventHotKeyID(signature: kHotKeySignature, id: UInt32(index))
             var ref: EventHotKeyRef?
@@ -115,13 +106,13 @@ class HotkeyManager {
                 GetApplicationEventTarget(), 0, &ref
             )
             if status != noErr {
-                hlog("FAILED to register hotkey \(index) (\(binding.display)) — OSStatus \(status)")
+                logger.error("failed to register hotkey \(index) (\(binding.display, privacy: .public)) — OSStatus \(status)")
             } else {
-                hlog("registered hotkey \(index): \(binding.display)")
+                logger.debug("registered hotkey \(index): \(binding.display, privacy: .public)")
             }
             hotKeyRefs.append(ref)
         }
-        hlog("hotkey registration complete")
+        logger.info("hotkey registration complete")
     }
 
     func unregister() {
@@ -131,7 +122,7 @@ class HotkeyManager {
     }
 
     private func handleCarbonHotKey(event: EventRef) -> OSStatus {
-        hlog("Carbon hotkey event received")
+        logger.debug("Carbon hotkey event received")
         var hotKeyID = EventHotKeyID()
         let err = GetEventParameter(
             event, UInt32(kEventParamDirectObject),
@@ -139,12 +130,12 @@ class HotkeyManager {
             MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID
         )
         guard err == noErr, hotKeyID.signature == kHotKeySignature else {
-            hlog("hotkey event parse failed — err=\(err) sig=\(hotKeyID.signature)")
+            logger.error("hotkey event parse failed — err=\(err) sig=\(hotKeyID.signature)")
             return OSStatus(eventNotHandledErr)
         }
         let index = Int(hotKeyID.id)
         guard index < bindings.count else { return OSStatus(eventNotHandledErr) }
-        hlog("dispatching action \(bindings[index].action.rawValue)")
+        logger.debug("dispatching action \(self.bindings[index].action.rawValue, privacy: .public)")
         WindowMover.shared.move(action: bindings[index].action)
         return noErr
     }
