@@ -101,6 +101,18 @@ hdiutil detach "$DEVICE" -quiet 2>/dev/null \
     || hdiutil detach "$DEVICE" -force -quiet
 hdiutil convert "$TMP_DMG" -format UDZO -o "$DMG" -quiet
 
+# ── 7. File icon — set app icon on the .dmg file itself ──────────────────────
+# This sets the custom icon on the DMG *file* in Finder (distinct from the
+# volume icon that appears when the DMG is open). Uses ASObjC (osascript with
+# "use framework") which is always available — no PyObjC dependency needed.
+DMG_ABS="$(cd "$(dirname "$DMG")" && pwd)/$(basename "$DMG")"
+ICNS_ABS="$(cd "$(dirname "Resources/AppIcon.icns")" && pwd)/AppIcon.icns"
+osascript << APPLESCRIPT
+use framework "AppKit"
+set theImage to current application's NSImage's alloc()'s initWithContentsOfFile_("${ICNS_ABS}")
+current application's NSWorkspace's sharedWorkspace()'s setIcon_forFile_options_(theImage, "${DMG_ABS}", 0)
+APPLESCRIPT
+
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 rm -f "$TMP_DMG"
 
