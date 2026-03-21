@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.2...v0.4.3) (2026-03-21)
+
+
+### Bug Fixes
+
+* eliminate release-please changelog bloat via skip-github-release ([#34](https://github.com/NaffanDroo/mcmac-window/issues/34)) ([097da12](https://github.com/NaffanDroo/mcmac-window/commit/097da1207bab6fc2457471c3498a20554a7de013))
+
 ## [0.4.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.1...v0.4.2) (2026-03-21)
 
 
