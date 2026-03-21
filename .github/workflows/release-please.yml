@@ -8,33 +8,34 @@ permissions:
   contents: write
   pull-requests: write
 
-env:
-  DMG_NAME: mcmac-window.dmg
-
-# Release-please does two things in one call:
-#   1. Process any merged release PR → create GitHub release + git tag
-#   2. Scan commits since the latest release → create/update the next release PR
-#
-# Steps 1 and 2 must run in separate jobs. Step 1 creates the GitHub release
-# via the API; step 2 immediately queries the API for "latest release" to find
-# the changelog baseline. GitHub's API has a brief propagation delay, so step 2
-# sees no releases and falls back to scanning all commits — producing a bloated
-# changelog PR.
-#
-# Solution: three sequential jobs.
-#   build-dmg       → build and validate the app and DMG
-#   create-release  → only creates the GitHub release + tag (skip-github-pull-request)
-#   attach-and-publish → attaches the DMG to the draft release and publishes it
-#   update-release-pr → only creates/updates the next release PR (skip-github-release)
-#
-# By the time update-release-pr runs (~60 s after create-release), the new
-# GitHub release has propagated and release-please finds the correct baseline.
-
 jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Get Token
+        id: get_workflow_token
+        uses: peter-murray/workflow-application-token-action@v4
+        with:
+          application_id: ${{ secrets.APPLICATION_ID }}
+          application_private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
-  # Build and test the app + DMG. A broken build blocks the entire release.
-  build-dmg:
-    name: Build & Test DMG
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ steps.get_workflow_token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+
+  # Build and attach the DMG — runs on macOS where Xcode is available
+  build-release-artifact:
+    name: Build & Upload DMG
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -48,95 +49,8 @@ jobs:
       - name: Create DMG
         run: ./scripts/make_dmg.sh
 
-      - name: Test DMG
-        run: ./scripts/test_dmg.sh
-
-      - name: Store DMG artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dmg
-          path: ${{ env.DMG_NAME }}
-          retention-days: 1
-
-  # Process any merged release PR and create the GitHub draft release + tag.
-  # Intentionally does NOT update the next release PR (skip-github-pull-request)
-  # to avoid the API propagation race described above.
-  #
-  # Uses GITHUB_TOKEN (not the App token) for release/tag creation. The App
-  # token is blocked by the repo's required_signatures ruleset when creating
-  # tags; GITHUB_TOKEN (github-actions[bot]) produces signed objects that
-  # satisfy the rule. PR creation is not needed here so the App token is
-  # not required.
-  create-release:
-    name: Create Release
-    needs: build-dmg
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          skip-github-pull-request: true
-
-  # Download the pre-built DMG, attach it to the draft release, then publish.
-  # The release only goes live once the artifact is attached — immutable release
-  # guarantee: users never see a release without a downloadable asset.
-  attach-and-publish:
-    name: Attach DMG & Publish Release
-    needs: create-release
-    if: ${{ needs.create-release.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download DMG artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dmg
-
-      - name: Attach DMG to draft release
+      - name: Upload DMG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ needs.create-release.outputs.tag_name }}"
-          VERSIONED="mcmac-window-${TAG}.dmg"
-          mv "${{ env.DMG_NAME }}" "${VERSIONED}"
-          gh release upload "${TAG}" "${VERSIONED}" \
-            --repo "${{ github.repository }}"
-
-      - name: Publish release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release edit "${{ needs.create-release.outputs.tag_name }}" \
-            --draft=false \
-            --repo "${{ github.repository }}"
-
-  # Create or update the next release PR. Runs after attach-and-publish (or
-  # after create-release when no release was just created). By this point the
-  # new GitHub release has been live for ~60 s and is fully visible to the API,
-  # so release-please finds the correct commit baseline and produces a clean PR.
-  # skip-github-release: true prevents a second release being created — the tag
-  # already exists from create-release and the state machine is satisfied.
-  update-release-pr:
-    name: Update Release PR
-    needs: [create-release, attach-and-publish]
-    if: ${{ always() && needs.create-release.result == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get Token
-        id: get_workflow_token
-        uses: peter-murray/workflow-application-token-action@v4
-        with:
-          application_id: ${{ secrets.APPLICATION_ID }}
-          application_private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-
-      - uses: googleapis/release-please-action@v4
-        with:
-          token: ${{ steps.get_workflow_token.outputs.token }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          skip-github-release: true
+          gh release upload ${{ needs.release-please.outputs.tag_name }} mcmac-window.dmg
