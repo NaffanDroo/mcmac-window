@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.5...v0.5.0) (2026-03-21)
+
+
+### Features
+
+* set custom icon on the .dmg file itself in Finder ([#45](https://github.com/NaffanDroo/mcmac-window/issues/45)) ([e2f166e](https://github.com/NaffanDroo/mcmac-window/commit/e2f166e90b85ae6d7bd8f8bd57adcb107ecdbaa5))
+
 ## [0.4.5](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.4...v0.4.5) (2026-03-21)
 
 
