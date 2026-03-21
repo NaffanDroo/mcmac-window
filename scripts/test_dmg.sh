@@ -8,6 +8,7 @@
 #   4. No custom background picture is set — Finder's native appearance is used,
 #      which gives white icon labels in dark mode without any overrides
 #   5. Volume has the kHasCustomIcon flag set (so the DMG uses our icon)
+#   6. DMG file itself has the kHasCustomIcon flag set (file icon in Finder)
 #
 # Usage: ./scripts/test_dmg.sh [path/to/mcmac-window.dmg]
 # Exit code: 0 = all pass, 1 = one or more failures.
@@ -71,6 +72,25 @@ if [[ ${#FINDER_INFO} -ge 20 ]]; then
     fi
 else
     _fail "Could not read com.apple.FinderInfo xattr on volume"
+fi
+
+# ── 6. DMG file custom-icon flag ─────────────────────────────────────────────
+# NSWorkspace.setIcon_forFile_options_ sets kHasCustomIcon in the file's
+# FinderInfo xattr (byte offset 8, same position as frFlags in directory info).
+echo ""
+echo "── DMG file icon flag ───────────────────────────"
+
+DMG_FINDER_INFO=$(xattr -px com.apple.FinderInfo "$DMG" 2>/dev/null | tr -d ' \n' || echo "")
+if [[ ${#DMG_FINDER_INFO} -ge 20 ]]; then
+    DMG_FLAGS_HEX="${DMG_FINDER_INFO:16:4}"
+    DMG_FLAGS_DEC=$((16#$DMG_FLAGS_HEX))
+    if [[ $((DMG_FLAGS_DEC & 0x0400)) -eq 1024 ]]; then
+        _pass "kHasCustomIcon flag set on .dmg file (flags=0x${DMG_FLAGS_HEX})"
+    else
+        _fail "kHasCustomIcon flag NOT set on .dmg file (flags=0x${DMG_FLAGS_HEX})"
+    fi
+else
+    _fail "Could not read com.apple.FinderInfo xattr on .dmg file"
 fi
 
 # ── 3. Icon positions ─────────────────────────────────────────────────────────
