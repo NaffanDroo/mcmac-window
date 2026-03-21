@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.3.0...v0.4.0) (2026-03-21)
+
+
+### Features
+
+* group keyboard shortcuts by type in README and shortcuts panel ([#19](https://github.com/NaffanDroo/mcmac-window/issues/19)) ([2a82dbf](https://github.com/NaffanDroo/mcmac-window/commit/2a82dbf448dbf5e5f0f3c141921be18c85dae426))
+* migrate to OSLog, rename to McMac Window, update bundle ID ([#23](https://github.com/NaffanDroo/mcmac-window/issues/23)) ([9f43dd9](https://github.com/NaffanDroo/mcmac-window/commit/9f43dd95b283bf99fc4aab4e844bf326a0d81338))
+* per-app ignore list and pause snapping toggle ([#22](https://github.com/NaffanDroo/mcmac-window/issues/22)) ([3f766fe](https://github.com/NaffanDroo/mcmac-window/commit/3f766fe4ba28d56b6dd964e8bf40a24628c12903))
+
+
+### Miscellaneous
+
+* add issue templates and improve CLAUDE.md ([#17](https://github.com/NaffanDroo/mcmac-window/issues/17)) ([0c36584](https://github.com/NaffanDroo/mcmac-window/commit/0c36584e71c96a9debbaf57be3a0676eabf64b33))
+
 ## [0.3.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.2.0...v0.3.0) (2026-03-21)
 
 
