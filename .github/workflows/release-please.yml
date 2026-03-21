@@ -15,9 +15,10 @@ env:
 
 jobs:
 
-  # Creates a draft GitHub Release (draft: true in release-please-config.json).
-  # Only runs when the CI workflow completed successfully — a broken build
-  # blocks the release entirely without duplicating the macOS build step.
+  # Updates the release PR (and detects when one has been merged).
+  # skip-github-release: true means release-please does NOT create the GitHub
+  # release or git tag here — attach-and-publish does both atomically once the
+  # DMG is ready, so the release is never publicly visible without an asset.
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
@@ -39,12 +40,13 @@ jobs:
           token: ${{ steps.get_workflow_token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-release: true
 
-  # Downloads the CI-built DMG (uploaded by ci.yml on main pushes), attaches
-  # it to the draft release, then publishes the release. The release only goes
-  # live once the artifact is attached — satisfying the immutable release guarantee.
+  # Downloads the CI-built DMG, creates the git tag, then creates the GitHub
+  # release with the DMG already attached — one atomic step so the release is
+  # never visible to users without an asset (immutable release guarantee).
   attach-and-publish:
-    name: Attach DMG & Publish Release
+    name: Create Release & Attach DMG
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
@@ -56,20 +58,15 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Attach DMG to draft release
+      - name: Create GitHub release with DMG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ needs.release-please.outputs.tag_name }}"
           VERSIONED="mcmac-window-${TAG}.dmg"
           mv "${{ env.DMG_NAME }}" "${VERSIONED}"
-          gh release upload "${TAG}" "${VERSIONED}" \
-            --repo "${{ github.repository }}"
-
-      - name: Publish release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release edit "${{ needs.release-please.outputs.tag_name }}" \
-            --draft=false \
+          gh release create "${TAG}" "${VERSIONED}" \
+            --title "${TAG}" \
+            --generate-notes \
+            --target "${{ github.event.workflow_run.head_sha }}" \
             --repo "${{ github.repository }}"
