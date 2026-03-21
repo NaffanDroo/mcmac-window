@@ -18,19 +18,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateAccessibilityMenuItem()
     }
 
+    // MARK: - Menu bar icon
+
+    /// Draws a 18×18 pt template image matching the app icon's split-panel motif.
+    /// Rendered as a template so macOS applies correct tinting in light/dark mode.
+    private func makeMenuBarImage() -> NSImage {
+        let pt: CGFloat = 18
+        let image = NSImage(size: NSSize(width: pt, height: pt), flipped: false) { _ in
+            let pad: CGFloat = 1.0
+            let gap: CGFloat = 1.5
+            let cr:  CGFloat = 2.0
+            let panelH = pt - pad * 2
+            let panelW = (pt - pad * 2 - gap) / 2
+
+            // Left panel — solid (active window)
+            let leftRect = NSRect(x: pad, y: pad, width: panelW, height: panelH)
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: leftRect, xRadius: cr, yRadius: cr).fill()
+
+            // Right panel — ghost (inactive side), matches app icon's translucent panel
+            let rightRect = NSRect(x: pad + panelW + gap, y: pad, width: panelW, height: panelH)
+            NSColor.black.withAlphaComponent(0.28).setFill()
+            NSBezierPath(roundedRect: rightRect, xRadius: cr, yRadius: cr).fill()
+
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
     // MARK: - Status item
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem?.button {
-            if let img = NSImage(systemSymbolName: "rectangle.3.group",
-                                 accessibilityDescription: "mcmac-window") {
-                img.isTemplate = true
-                button.image = img
-            } else {
-                button.title = "W"
-            }
+            button.image = makeMenuBarImage()
             button.toolTip = "mcmac-window"
         }
 

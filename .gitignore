@@ -2,6 +2,10 @@
 mcmac-window.app/
 Tests/test_runner
 
+# Distribution artefacts
+*.dmg
+*-tmp.dmg
+
 # Temporary / debug
 /tmp/mcmac-window.log
 

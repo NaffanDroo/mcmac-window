@@ -28,13 +28,17 @@ fi
 
 CONTENTS="$BUNDLE/Contents"
 MACOS="$CONTENTS/MacOS"
-mkdir -p "$MACOS"
+RESOURCES="$CONTENTS/Resources"
+mkdir -p "$MACOS" "$RESOURCES"
 
 echo "→ Compiling…"
 swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "$OPT_FLAG" ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} -o "$MACOS/$BINARY_NAME"
 
 echo "→ Copying Info.plist…"
 cp Info.plist "$CONTENTS/Info.plist"
+
+echo "→ Copying icon…"
+cp Resources/AppIcon.icns "$RESOURCES/AppIcon.icns"
 
 echo "→ Signing bundle…"
 # Sign the whole bundle so the code-signing identifier matches the bundle ID

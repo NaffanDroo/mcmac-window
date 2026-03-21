@@ -12,6 +12,9 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - name: Get Token
         id: get_workflow_token
@@ -27,23 +30,27 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # Build and attach the .app bundle to the GitHub release
+
+  # Build and attach the DMG — runs on macOS where Xcode is available
+  build-release-artifact:
+    name: Build & Upload DMG
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: macos-15
+    steps:
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
 
       - name: Select Xcode
-        if: ${{ steps.release.outputs.release_created }}
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Build release artifact
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          ./build.sh
-          zip -r mcmac-window.zip mcmac-window.app
+      - name: Build app
+        run: ./build.sh
 
-      - name: Upload release artifact
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Create DMG
+        run: ./scripts/make_dmg.sh
+
+      - name: Upload DMG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ steps.release.outputs.tag_name }} mcmac-window.zip
+          gh release upload ${{ needs.release-please.outputs.tag_name }} mcmac-window.dmg
