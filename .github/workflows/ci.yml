@@ -31,3 +31,12 @@ jobs:
         # Geometry tests run fully. WindowMover integration tests require a
         # real screen and Accessibility permission; they skip gracefully in
         # headless CI via `try skip(...)` and do not fail the suite.
+
+      - name: Create DMG
+        run: ./scripts/make_dmg.sh
+
+      - name: Test DMG
+        run: ./scripts/test_dmg.sh
+        # Verifies file presence, icon positions (via Finder AppleScript),
+        # volume kHasCustomIcon flag, and background image darkness.
+        # Runs fully on macos-15 which provides a GUI session with Finder.
