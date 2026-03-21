@@ -1,8 +1,13 @@
-# mcmac-window
+# McMac Window
 
-Basic Mac Window manager, heavily created with Claude.
+> Lightweight macOS window manager — snap any window into place with a hotkey.
 
-A lightweight macOS window manager inspired by [Rectangle](https://rectangleapp.com), built in pure Swift with zero external dependencies.
+[![CI](https://github.com/NaffanDroo/mcmac-window/actions/workflows/ci.yml/badge.svg)](https://github.com/NaffanDroo/mcmac-window/actions/workflows/ci.yml)
+![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)
+![Swift](https://img.shields.io/badge/Swift-5-orange)
+![No dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
+
+Inspired by [Rectangle](https://rectangleapp.com), built in pure Swift with a single `swiftc` invocation — no Xcode project, no package manager, no external dependencies.
 
 ## Requirements
 
@@ -10,10 +15,10 @@ A lightweight macOS window manager inspired by [Rectangle](https://rectangleapp.
 - Xcode Command Line Tools (`xcode-select --install`)
 - Accessibility permission (prompted on first launch)
 
-## Build & Run
+## Installation
 
 ```bash
-./build.sh          # compile → mcmac-window.app
+./build.sh
 open mcmac-window.app
 ```
 
@@ -21,15 +26,19 @@ Grant **Accessibility** permission when prompted (System Settings → Privacy & 
 
 ### Accessibility permission after a rebuild
 
-Each rebuild produces a new binary with a different code signature. macOS ties the Accessibility permission to the signature, so rebuilding invalidates the old grant and hotkeys stop working. If that happens:
+Each rebuild produces a new binary. macOS ties the Accessibility permission to the code signature, so rebuilding invalidates the old grant and hotkeys stop working. If that happens:
 
 ```bash
 tccutil reset Accessibility com.example.mcmac-window
 ```
 
-Then relaunch the app — it will prompt for permission again. If it doesn't prompt, run `./run.sh` to force a fresh launch.
+Then relaunch — the app will prompt for permission again. If it doesn't prompt, run `./run.sh` to force a fresh launch.
 
 ## Keyboard Shortcuts
+
+All actions apply to the frontmost window on whatever screen it currently occupies.
+
+### Halves
 
 | Keys | Action |
 |------|--------|
@@ -37,19 +46,38 @@ Then relaunch the app — it will prompt for permission again. If it doesn't pro
 | `⌃⌥ →` | Right half |
 | `⌃⌥ ↑` | Top half |
 | `⌃⌥ ↓` | Bottom half |
-| `⌃⌥ U` | Top-left quarter |
-| `⌃⌥ I` | Top-right quarter |
-| `⌃⌥ J` | Bottom-left quarter |
-| `⌃⌥ K` | Bottom-right quarter |
+
+### Quarters
+
+| Keys | Action |
+|------|--------|
+| `⌃⌥ U` | Top-left |
+| `⌃⌥ I` | Top-right |
+| `⌃⌥ J` | Bottom-left |
+| `⌃⌥ K` | Bottom-right |
+
+### Thirds
+
+| Keys | Action |
+|------|--------|
 | `⌃⌥ D` | First third |
 | `⌃⌥ F` | Center third |
 | `⌃⌥ G` | Last third |
 | `⌃⌥ E` | Left two thirds |
 | `⌃⌥ T` | Right two thirds |
+
+### Special
+
+| Keys | Action |
+|------|--------|
 | `⌃⌥ ↩` | Maximize |
 | `⌃⌥ C` | Center (65% of screen) |
 
-All actions apply to the window on whichever screen it currently occupies.
+### Push-through
+
+Pressing a directional shortcut again when the window is already at its snap target moves it to the **mirror position on the adjacent screen**. For example, pressing `⌃⌥ ←` on a window already snapped to the left half moves it to the right half of the screen to the left.
+
+Actions without a clear direction (Maximize, Center, and Thirds) do not push through.
 
 ## Running Tests
 
@@ -57,23 +85,26 @@ All actions apply to the window on whichever screen it currently occupies.
 ./test.sh
 ```
 
-Zero external dependencies — only Xcode Command Line Tools required.
-
 ## Project Structure
 
 ```
 Sources/
-  WindowAction.swift   — snap action enum
-  Geometry.swift       — pure coordinate math (fully unit tested)
-  WindowMover.swift    — AX window read/write + focusedWindow lookup
-  HotkeyManager.swift  — Carbon RegisterEventHotKey registration
-  AppDelegate.swift    — menu bar item, accessibility prompt
-  main.swift           — NSApplication bootstrap
+  WindowAction.swift     — snap action enum
+  Geometry.swift         — pure coordinate math (fully unit tested)
+  WindowMover.swift      — AX window read/write + focusedWindow lookup
+  HotkeyManager.swift    — Carbon RegisterEventHotKey registration
+  AppDelegate.swift      — menu bar item, accessibility prompt
+  main.swift             — NSApplication bootstrap
 Tests/
-  TestFramework.swift  — zero-dependency assertion helpers
-  GeometryTests.swift  — unit tests for all geometry logic (36 tests)
+  TestFramework.swift    — zero-dependency assertion helpers
+  GeometryTests.swift    — unit tests for all geometry logic
   WindowMoverTests.swift — integration tests (own-process AX)
-  TestRunner.swift     — test entry point
-Info.plist             — LSUIElement=true (no Dock icon)
+  TestRunner.swift       — test entry point
+Resources/
+  AppIcon.icns           — app and DMG volume icon
+scripts/
+  make_dmg.sh            — builds a distribution DMG
+  test_dmg.sh            — verifies DMG layout and appearance
+Info.plist               — LSUIElement=true (no Dock icon)
 build.sh / run.sh / test.sh
 ```
