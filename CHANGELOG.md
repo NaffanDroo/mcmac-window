@@ -1,6 +1,7 @@
 # Changelog
 
 ## [0.4.4](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.2...v0.4.4) (2026-03-21)
+<!-- v0.4.3 tag was skipped — permanently reserved by a previously published immutable release -->
 
 
 ### Bug Fixes
