@@ -90,6 +90,49 @@ func windowMoverTests() -> [Test] { [
         }
     },
 
+    Test("move: action is skipped when snapping is paused") {
+        guard NSScreen.main != nil else { try skip("no screen") }
+        let window = makeTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { try skip("no AX element") }
+
+        // Snap to a known position via the internal method (bypasses the pause guard).
+        WindowMover.shared.moveWindow(ax, action: .leftHalf); pump()
+        let savedX = window.frame.origin.x
+        let savedW = window.frame.size.width
+
+        // Pause snapping and call the public API — must be a no-op.
+        UserDefaults.standard.set(true, forKey: "snappingPaused")
+        defer { UserDefaults.standard.removeObject(forKey: "snappingPaused") }
+        WindowMover.shared.move(action: .rightHalf); pump()
+
+        assertEq(window.frame.origin.x,   savedX, tol: 3, "x unchanged while paused")
+        assertEq(window.frame.size.width,  savedW, tol: 3, "w unchanged while paused")
+    },
+
+    Test("ignore list: entries persist in UserDefaults and can be removed") {
+        // Tests the storage layer only; the move()-level skip requires a known
+        // bundle ID from the frontmost app, which is unavailable in the headless
+        // test runner (no Info.plist → nil bundleIdentifier).
+        let key = "ignoredBundleIDs"
+        let original = UserDefaults.standard.stringArray(forKey: key)
+        defer { UserDefaults.standard.set(original, forKey: key) }
+
+        UserDefaults.standard.set(["com.apple.finder", "com.google.Chrome"], forKey: key)
+        let stored = UserDefaults.standard.stringArray(forKey: key) ?? []
+        assertEq(stored.count, 2, "two entries stored")
+        assertTrue(stored.contains("com.apple.finder"), "finder in list")
+        assertTrue(stored.contains("com.google.Chrome"), "chrome in list")
+
+        // Remove one entry.
+        var updated = stored
+        updated.removeAll { $0 == "com.apple.finder" }
+        UserDefaults.standard.set(updated, forKey: key)
+        let afterRemove = UserDefaults.standard.stringArray(forKey: key) ?? []
+        assertEq(afterRemove.count, 1, "one entry after remove")
+        assertTrue(!afterRemove.contains("com.apple.finder"), "finder removed")
+        assertTrue(afterRemove.contains("com.google.Chrome"), "chrome still present")
+    },
+
     Test("firstThird/centerThird/lastThird tile across full screen width") {
         guard !NSScreen.screens.isEmpty, let vf = NSScreen.main?.visibleFrame else { try skip("no screen") }
         let window = makeTestWindow(); defer { window.close() }
