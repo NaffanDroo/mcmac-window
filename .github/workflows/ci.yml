@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  DMG_NAME: mcmac-window.dmg
+
 jobs:
   test:
     name: Build & Test
@@ -40,3 +43,13 @@ jobs:
         # Verifies file presence, icon positions (via Finder AppleScript),
         # volume kHasCustomIcon flag, and background image darkness.
         # Runs fully on macos-15 which provides a GUI session with Finder.
+
+      - name: Upload DMG artifact
+        # Only needed on main pushes — release-please.yml downloads this artifact
+        # via workflow_run instead of rebuilding the DMG from scratch.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmg
+          path: ${{ env.DMG_NAME }}
+          retention-days: 7
