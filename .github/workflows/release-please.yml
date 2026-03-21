@@ -1,7 +1,9 @@
 name: Release Please
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -13,39 +15,13 @@ env:
 
 jobs:
 
-  # Build and test the DMG before release-please runs.
-  # A broken build blocks the release entirely.
-  build-dmg:
-    name: Build & Test DMG
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
-
-      - name: Build app
-        run: ./build.sh
-
-      - name: Create DMG
-        run: ./scripts/make_dmg.sh
-
-      - name: Test DMG
-        run: ./scripts/test_dmg.sh
-
-      - name: Store DMG artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dmg
-          path: ${{ env.DMG_NAME }}
-          retention-days: 1
-
   # Creates a draft GitHub Release (draft: true in release-please-config.json).
-  # Only runs once build-dmg passes.
+  # Only runs when the CI workflow completed successfully — a broken build
+  # blocks the release entirely without duplicating the macOS build step.
   release-please:
     name: Release Please
-    needs: build-dmg
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -64,19 +40,21 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  # Downloads the pre-built DMG, attaches it to the draft release,
-  # then publishes the release. The release only goes live once the
-  # artifact is attached — satisfying the immutable release guarantee.
+  # Downloads the CI-built DMG (uploaded by ci.yml on main pushes), attaches
+  # it to the draft release, then publishes the release. The release only goes
+  # live once the artifact is attached — satisfying the immutable release guarantee.
   attach-and-publish:
     name: Attach DMG & Publish Release
-    needs: [build-dmg, release-please]
+    needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
-      - name: Download DMG artifact
+      - name: Download DMG artifact from CI
         uses: actions/download-artifact@v4
         with:
           name: dmg
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Attach DMG to draft release
         env:
