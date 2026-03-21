@@ -29,7 +29,7 @@ Grant **Accessibility** permission when prompted (System Settings → Privacy & 
 Each rebuild produces a new binary. macOS ties the Accessibility permission to the code signature, so rebuilding invalidates the old grant and hotkeys stop working. If that happens:
 
 ```bash
-tccutil reset Accessibility com.example.mcmac-window
+tccutil reset Accessibility org.nathandrew.mcmac-window
 ```
 
 Then relaunch — the app will prompt for permission again. If it doesn't prompt, run `./run.sh` to force a fresh launch.
@@ -84,16 +84,18 @@ Actions without a clear direction (Maximize, Center, and Thirds) do not push thr
 **Hotkeys not working?** Grant Accessibility permission in System Settings → Privacy & Security → Accessibility, then relaunch. After a rebuild, reset the permission first:
 
 ```bash
-tccutil reset Accessibility com.example.mcmac-window
+tccutil reset Accessibility org.nathandrew.mcmac-window
 ```
 
 **Watching live logs:**
 
 ```bash
-tail -f /tmp/mcmac-window.log
+log stream --predicate 'subsystem == "org.nathandrew.mcmac-window"' --level debug
 ```
 
-The log records every hotkey event, which app was frontmost, whether the action was skipped (paused or ignored), and any AX errors.
+Or open **Console.app** and filter by subsystem `org.nathandrew.mcmac-window`. Logs record every hotkey event, which app was frontmost, whether the action was skipped (paused or ignored), and any AX errors.
+
+You can also export a day's worth of logs from the menu bar via **Export Logs…**, which saves a plain-text `.log` file you can share for bug reports.
 
 ## Running Tests
 

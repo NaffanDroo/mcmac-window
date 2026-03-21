@@ -42,7 +42,7 @@ cp Resources/AppIcon.icns "$RESOURCES/AppIcon.icns"
 
 echo "→ Signing bundle…"
 # Sign the whole bundle so the code-signing identifier matches the bundle ID
-# (com.example.mcmac-window). Without this the linker assigns the bare binary
+# (org.nathandrew.mcmac-window). Without this the linker assigns the bare binary
 # name as the identifier, which mismatches the TCC entry macOS creates when
 # the user enables Accessibility in System Settings → Privacy & Security.
 codesign --force --sign - "$BUNDLE"

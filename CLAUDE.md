@@ -52,7 +52,7 @@ scripts/
   make_dmg.sh           — builds a distribution DMG (layout, volume icon, Applications alias)
   test_dmg.sh           — verifies DMG contents, icon positions, and label appearance
   make_icon.swift       — generates AppIcon.icns from code
-Info.plist              — LSUIElement=true, bundle id com.example.mcmac-window
+Info.plist              — LSUIElement=true, bundle id org.nathandrew.mcmac-window
 build.sh / run.sh / test.sh
 .github/workflows/ci.yml — runs on macos-15; geometry tests always pass; AX integration tests skip gracefully in headless CI
 ```
@@ -86,7 +86,7 @@ The entire app compiles with one `swiftc` line. Keep it that way.
 
 ### Code signing
 
-The bundle must be signed (even with ad-hoc `-`) so the bundle identifier (`com.example.mcmac-window`) matches the TCC entry macOS creates when the user enables Accessibility. `build.sh` does `codesign --force --sign - mcmac-window.app` automatically.
+The bundle must be signed (even with ad-hoc `-`) so the bundle identifier (`org.nathandrew.mcmac-window`) matches the TCC entry macOS creates when the user enables Accessibility. `build.sh` does `codesign --force --sign - mcmac-window.app` automatically.
 
 ### Logging
 
