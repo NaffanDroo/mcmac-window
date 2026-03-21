@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.0...v0.4.1) (2026-03-21)
+
+
+### Miscellaneous
+
+* build DMG before release-please, publish only after artifact attached ([#26](https://github.com/NaffanDroo/mcmac-window/issues/26)) ([61a9432](https://github.com/NaffanDroo/mcmac-window/commit/61a94322399aadbe513eb03f4725b4ade8a49ed9))
+
 ## [0.4.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.3.0...v0.4.0) (2026-03-21)
 
 
