@@ -83,14 +83,18 @@ jobs:
       - name: Test DMG
         run: ./scripts/test_dmg.sh
 
-      - name: Attach DMG to draft release
+      - name: Attach zip to draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ needs.create-release.outputs.tag_name }}"
-          VERSIONED="mcmac-window-${TAG}.dmg"
-          mv "${{ env.DMG_NAME }}" "${VERSIONED}"
-          gh release upload "${TAG}" "${VERSIONED}" \
+          VERSIONED_DMG="mcmac-window-${TAG}.dmg"
+          VERSIONED_ZIP="mcmac-window-${TAG}.zip"
+          mv "${{ env.DMG_NAME }}" "${VERSIONED_DMG}"
+          # ditto with --rsrc preserves the resource fork in the zip so the
+          # DMG file icon (set by make_dmg.sh) survives extraction on macOS.
+          ditto -c -k --keepParent --rsrc "${VERSIONED_DMG}" "${VERSIONED_ZIP}"
+          gh release upload "${TAG}" "${VERSIONED_ZIP}" \
             --repo "${{ github.repository }}"
 
       - name: Publish release
