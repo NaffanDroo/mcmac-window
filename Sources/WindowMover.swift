@@ -22,6 +22,19 @@ class WindowMover {
 
     func move(action: WindowAction) {
         mlog("move(\(action.rawValue)) triggered")
+
+        guard !UserDefaults.standard.bool(forKey: "snappingPaused") else {
+            mlog("snapping paused — action skipped")
+            return
+        }
+
+        let ignoredIDs = UserDefaults.standard.stringArray(forKey: "ignoredBundleIDs") ?? []
+        if let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
+           ignoredIDs.contains(bundleID) {
+            mlog("app \(bundleID) is on ignore list — action skipped")
+            return
+        }
+
         guard let window = focusedWindow() else {
             mlog("focusedWindow() returned nil — AX permission likely missing or revoked")
             return

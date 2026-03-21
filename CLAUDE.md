@@ -146,6 +146,17 @@ This section documents rules that are especially easy for an AI to accidentally 
 - **Every new `WindowAction` case needs a geometry test.** The PR template checklist enforces this at review time. No case ships without exact pixel-value assertions in `Tests/GeometryTests.swift`.
 - **Update `CLAUDE.md` keyboard shortcuts table for every new hotkey.** The table is the authoritative human-readable reference; the code is the machine-readable one. Both must stay in sync.
 
+### Test-driven development
+
+**Write tests before implementation.** For every new behaviour:
+
+1. Add the test(s) to the appropriate file (`GeometryTests.swift` for pure maths, `WindowMoverTests.swift` for AX/move behaviour).
+2. Verify the tests fail (or are skipped) against the current code.
+3. Implement until all tests pass.
+4. Commit tests and implementation together in a single commit.
+
+If a behaviour is genuinely untestable in the current architecture (e.g. requires a bundle ID that the headless test runner doesn't have), write the test anyway with a descriptive `try skip("reason")` and add a comment explaining the architectural limitation. Do not omit the test entirely.
+
 ### Clarifying before implementing
 
 Before starting non-trivial work — especially anything with visible UI behaviour, system interactions, or external tool integration — ask 1–2 focused questions:
@@ -161,7 +172,7 @@ If a request describes a symptom ("the text is wrong", "make it look better") wi
 - One logical change per commit. Do not batch unrelated fixes.
 - Do not amend or force-push commits that have already been reviewed — open a new commit instead.
 - Do not use `--no-verify` to bypass hooks or `--force` to bypass branch protection.
-- **Never push to the remote without explicit instruction from the user.** Commit locally as needed; always wait for "push" or "create PR" before running `git push`.
+- **Always push to the remote immediately after every local commit.** Use `git push` (with `-u origin <branch>` on first push). Do not wait for a PR to be opened.
 - **After every commit or code change, update the open PR description** to reflect the current state of the branch. Run `git diff main...HEAD --stat` and `git log main..HEAD --oneline` to get a full picture of all changes, then use `gh pr edit` to rewrite the title and body. The PR description is the canonical human-readable summary of the branch — it must stay in sync with the code.
 
 ### Efficiency checkpoint (at PR creation)

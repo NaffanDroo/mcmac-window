@@ -79,6 +79,22 @@ Pressing a directional shortcut again when the window is already at its snap tar
 
 Actions without a clear direction (Maximize, Center, and Thirds) do not push through.
 
+## Troubleshooting
+
+**Hotkeys not working?** Grant Accessibility permission in System Settings → Privacy & Security → Accessibility, then relaunch. After a rebuild, reset the permission first:
+
+```bash
+tccutil reset Accessibility com.example.mcmac-window
+```
+
+**Watching live logs:**
+
+```bash
+tail -f /tmp/mcmac-window.log
+```
+
+The log records every hotkey event, which app was frontmost, whether the action was skipped (paused or ignored), and any AX errors.
+
 ## Running Tests
 
 ```bash
