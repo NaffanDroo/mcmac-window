@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.4...v0.4.5) (2026-03-21)
+
+
+### Documentation
+
+* note skipped v0.4.3 tag in changelog ([#41](https://github.com/NaffanDroo/mcmac-window/issues/41)) ([c87d087](https://github.com/NaffanDroo/mcmac-window/commit/c87d0872daef39c66244a0a02abad6d10a463b41))
+
 ## [0.4.4](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.2...v0.4.4) (2026-03-21)
 <!-- v0.4.3 tag was skipped — permanently reserved by a previously published immutable release -->
 
