@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.0...v0.5.1) (2026-03-21)
+
+
+### Bug Fixes
+
+* ship DMG inside a zip to preserve resource fork and file icon ([#47](https://github.com/NaffanDroo/mcmac-window/issues/47)) ([dd6ba12](https://github.com/NaffanDroo/mcmac-window/commit/dd6ba12005babd8a55441117ad7a88ad88e77f96))
+
 ## [0.5.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.5...v0.5.0) (2026-03-21)
 
 
