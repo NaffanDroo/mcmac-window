@@ -61,6 +61,12 @@ jobs:
   # Process any merged release PR and create the GitHub draft release + tag.
   # Intentionally does NOT update the next release PR (skip-github-pull-request)
   # to avoid the API propagation race described above.
+  #
+  # Uses GITHUB_TOKEN (not the App token) for release/tag creation. The App
+  # token is blocked by the repo's required_signatures ruleset when creating
+  # tags; GITHUB_TOKEN (github-actions[bot]) produces signed objects that
+  # satisfy the rule. PR creation is not needed here so the App token is
+  # not required.
   create-release:
     name: Create Release
     needs: build-dmg
@@ -69,17 +75,10 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - name: Get Token
-        id: get_workflow_token
-        uses: peter-murray/workflow-application-token-action@v4
-        with:
-          application_id: ${{ secrets.APPLICATION_ID }}
-          application_private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{ steps.get_workflow_token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           skip-github-pull-request: true
