@@ -172,7 +172,7 @@ If a request describes a symptom ("the text is wrong", "make it look better") wi
 - One logical change per commit. Do not batch unrelated fixes.
 - Do not amend or force-push commits that have already been reviewed — open a new commit instead.
 - Do not use `--no-verify` to bypass hooks or `--force` to bypass branch protection.
-- **Never push to the remote without explicit instruction from the user.** Commit locally as needed; always wait for "push" or "create PR" before running `git push`.
+- **Always push to the remote immediately after every local commit.** Use `git push` (with `-u origin <branch>` on first push). Do not wait for a PR to be opened.
 - **After every commit or code change, update the open PR description** to reflect the current state of the branch. Run `git diff main...HEAD --stat` and `git log main..HEAD --oneline` to get a full picture of all changes, then use `gh pr edit` to rewrite the title and body. The PR description is the canonical human-readable summary of the branch — it must stay in sync with the code.
 
 ### Efficiency checkpoint (at PR creation)
