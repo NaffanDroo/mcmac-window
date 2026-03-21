@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.3](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.2...v0.4.3) (2026-03-21)
+## [0.4.4](https://github.com/NaffanDroo/mcmac-window/compare/v0.4.2...v0.4.4) (2026-03-21)
 
 
 ### Bug Fixes
