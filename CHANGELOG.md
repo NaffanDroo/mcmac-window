@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.2.0...v0.3.0) (2026-03-21)
+
+
+### Features
+
+* app icon, menu bar icon, DMG packaging, and release workflow ([#12](https://github.com/NaffanDroo/mcmac-window/issues/12)) ([d93f4ff](https://github.com/NaffanDroo/mcmac-window/commit/d93f4ffc0c20a8787175dd7515a61bb053d04419))
+
 ## [0.2.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.1.0...v0.2.0) (2026-03-20)
 
 
