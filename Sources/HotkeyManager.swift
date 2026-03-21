@@ -15,11 +15,19 @@ private func hlog(_ msg: String) {
 
 // WindowAction is defined in WindowAction.swift (no Carbon dependency)
 
+private enum Group: String {
+    case halves   = "Halves"
+    case quarters = "Quarters"
+    case thirds   = "Thirds"
+    case special  = "Special"
+}
+
 private struct Binding {
     let keyCode: UInt32
     let carbonMods: UInt32
     let action: WindowAction
     let display: String
+    let group: Group
 }
 
 private enum Key {
@@ -57,22 +65,27 @@ class HotkeyManager {
     private var eventHandlerRef: EventHandlerRef?
 
     // Matches Rectangle's "alternate" default shortcut set (⌃⌥-based).
+    // Ordered by group so the shortcuts panel renders with clear sections.
     private let bindings: [Binding] = [
-        Binding(keyCode: Key.leftArrow, carbonMods: C|O, action: .leftHalf,      display: "⌃⌥ ←   Left Half"),
-        Binding(keyCode: Key.rightArrow,carbonMods: C|O, action: .rightHalf,     display: "⌃⌥ →   Right Half"),
-        Binding(keyCode: Key.upArrow,   carbonMods: C|O, action: .topHalf,       display: "⌃⌥ ↑   Top Half"),
-        Binding(keyCode: Key.downArrow, carbonMods: C|O, action: .bottomHalf,    display: "⌃⌥ ↓   Bottom Half"),
-        Binding(keyCode: Key.u,         carbonMods: C|O, action: .topLeft,       display: "⌃⌥ U   Top Left"),
-        Binding(keyCode: Key.i,         carbonMods: C|O, action: .topRight,      display: "⌃⌥ I   Top Right"),
-        Binding(keyCode: Key.j,         carbonMods: C|O, action: .bottomLeft,    display: "⌃⌥ J   Bottom Left"),
-        Binding(keyCode: Key.k,         carbonMods: C|O, action: .bottomRight,   display: "⌃⌥ K   Bottom Right"),
-        Binding(keyCode: Key.return,    carbonMods: C|O, action: .maximize,      display: "⌃⌥ ↩   Maximize"),
-        Binding(keyCode: Key.c,         carbonMods: C|O, action: .center,        display: "⌃⌥ C   Center"),
-        Binding(keyCode: Key.d,         carbonMods: C|O, action: .firstThird,    display: "⌃⌥ D   First Third"),
-        Binding(keyCode: Key.f,         carbonMods: C|O, action: .centerThird,   display: "⌃⌥ F   Center Third"),
-        Binding(keyCode: Key.g,         carbonMods: C|O, action: .lastThird,     display: "⌃⌥ G   Last Third"),
-        Binding(keyCode: Key.e,         carbonMods: C|O, action: .leftTwoThirds, display: "⌃⌥ E   Left Two Thirds"),
-        Binding(keyCode: Key.t,         carbonMods: C|O, action: .rightTwoThirds,display: "⌃⌥ T   Right Two Thirds"),
+        // Halves
+        Binding(keyCode: Key.leftArrow,  carbonMods: C|O, action: .leftHalf,       display: "⌃⌥ ←   Left Half",        group: .halves),
+        Binding(keyCode: Key.rightArrow, carbonMods: C|O, action: .rightHalf,      display: "⌃⌥ →   Right Half",       group: .halves),
+        Binding(keyCode: Key.upArrow,    carbonMods: C|O, action: .topHalf,        display: "⌃⌥ ↑   Top Half",         group: .halves),
+        Binding(keyCode: Key.downArrow,  carbonMods: C|O, action: .bottomHalf,     display: "⌃⌥ ↓   Bottom Half",      group: .halves),
+        // Quarters
+        Binding(keyCode: Key.u,          carbonMods: C|O, action: .topLeft,        display: "⌃⌥ U   Top Left",         group: .quarters),
+        Binding(keyCode: Key.i,          carbonMods: C|O, action: .topRight,       display: "⌃⌥ I   Top Right",        group: .quarters),
+        Binding(keyCode: Key.j,          carbonMods: C|O, action: .bottomLeft,     display: "⌃⌥ J   Bottom Left",      group: .quarters),
+        Binding(keyCode: Key.k,          carbonMods: C|O, action: .bottomRight,    display: "⌃⌥ K   Bottom Right",     group: .quarters),
+        // Thirds
+        Binding(keyCode: Key.d,          carbonMods: C|O, action: .firstThird,     display: "⌃⌥ D   First Third",      group: .thirds),
+        Binding(keyCode: Key.f,          carbonMods: C|O, action: .centerThird,    display: "⌃⌥ F   Center Third",     group: .thirds),
+        Binding(keyCode: Key.g,          carbonMods: C|O, action: .lastThird,      display: "⌃⌥ G   Last Third",       group: .thirds),
+        Binding(keyCode: Key.e,          carbonMods: C|O, action: .leftTwoThirds,  display: "⌃⌥ E   Left Two Thirds",  group: .thirds),
+        Binding(keyCode: Key.t,          carbonMods: C|O, action: .rightTwoThirds, display: "⌃⌥ T   Right Two Thirds", group: .thirds),
+        // Special
+        Binding(keyCode: Key.return,     carbonMods: C|O, action: .maximize,       display: "⌃⌥ ↩   Maximize",         group: .special),
+        Binding(keyCode: Key.c,          carbonMods: C|O, action: .center,         display: "⌃⌥ C   Center",           group: .special),
     ]
 
     func register() {
@@ -136,5 +149,17 @@ class HotkeyManager {
         return noErr
     }
 
-    func shortcutDescriptions() -> [String] { bindings.map { $0.display } }
+    func shortcutDescriptions() -> [String] {
+        var result: [String] = []
+        var lastGroup: Group?
+        for binding in bindings {
+            if binding.group != lastGroup {
+                if lastGroup != nil { result.append("") }
+                result.append("── \(binding.group.rawValue) ──")
+                lastGroup = binding.group
+            }
+            result.append(binding.display)
+        }
+        return result
+    }
 }
