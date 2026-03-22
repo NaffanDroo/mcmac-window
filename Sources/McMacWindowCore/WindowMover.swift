@@ -4,14 +4,14 @@ import OSLog
 
 private let logger = Logger(subsystem: "org.nathandrew.mcmac-window", category: "WindowMover")
 
-class WindowMover {
+public class WindowMover {
 
-    static let shared = WindowMover()
+    public static let shared = WindowMover()
     private init() {}
 
     // MARK: - Public API
 
-    func move(action: WindowAction) {
+    public func move(action: WindowAction) {
         logger.debug("move triggered: \(action.rawValue, privacy: .public)")
 
         guard !UserDefaults.standard.bool(forKey: "snappingPaused") else {
@@ -35,7 +35,7 @@ class WindowMover {
     }
 
     /// Internal: lets integration tests pass a known AX element directly.
-    func moveWindow(_ window: AXUIElement, action: WindowAction) {
+    public func moveWindow(_ window: AXUIElement, action: WindowAction) {
         guard let axPos  = windowPosition(window),
               let axSize = windowSize(window) else { return }
 
@@ -100,7 +100,7 @@ class WindowMover {
 
     // MARK: - AX read/write (internal for tests)
 
-    func windowPosition(_ element: AXUIElement) -> CGPoint? {
+    public func windowPosition(_ element: AXUIElement) -> CGPoint? {
         var ref: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXPositionAttribute as CFString, &ref) == .success,
               let axVal = ref else { return nil }
@@ -109,7 +109,7 @@ class WindowMover {
         return point
     }
 
-    func windowSize(_ element: AXUIElement) -> CGSize? {
+    public func windowSize(_ element: AXUIElement) -> CGSize? {
         var ref: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXSizeAttribute as CFString, &ref) == .success,
               let axVal = ref else { return nil }
@@ -118,7 +118,7 @@ class WindowMover {
         return size
     }
 
-    func setFrame(_ rect: CGRect, on window: AXUIElement) {
+    public func setFrame(_ rect: CGRect, on window: AXUIElement) {
         // Set size first, then position, then size again. This order handles
         // cross-screen moves in both directions: when moving to a smaller screen
         // the first resize prevents the window server from clamping the position;

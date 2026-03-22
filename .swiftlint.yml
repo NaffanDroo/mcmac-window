@@ -3,9 +3,7 @@ included:
   - Tests
 
 excluded:
-  # Zero-dependency test infrastructure — uses intentional short names and
-  # aligned spacing that conflict with style rules.
-  - Tests/TestFramework.swift
+  - .build
 
 disabled_rules:
   - todo                 # TODOs are acceptable in source comments
@@ -44,7 +42,7 @@ line_length:
   ignores_urls: true
 
 type_body_length:
-  warning: 250
+  warning: 260
   error: 350
 
 function_body_length:

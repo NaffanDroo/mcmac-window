@@ -14,7 +14,7 @@ NEEDS_BUILD=false
 if [[ ! -f "$BINARY" ]]; then
     NEEDS_BUILD=true
 else
-    for src in Sources/*.swift Info.plist; do
+    for src in Sources/McMacWindowCore/*.swift Sources/McMacWindow/*.swift Info.plist Package.swift; do
         if [[ "$src" -nt "$BINARY" ]]; then NEEDS_BUILD=true; break; fi
     done
 fi
