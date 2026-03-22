@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.1...v0.5.2) (2026-03-22)
+
+
+### Bug Fixes
+
+* address code review findings across security, correctness, and test coverage ([#52](https://github.com/NaffanDroo/mcmac-window/issues/52)) ([52f2ef3](https://github.com/NaffanDroo/mcmac-window/commit/52f2ef3a91bc306cb40c60e7826d364c857624e0))
+
 ## [0.5.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.0...v0.5.1) (2026-03-21)
 
 
