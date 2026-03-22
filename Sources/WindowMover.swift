@@ -119,11 +119,19 @@ class WindowMover {
     }
 
     func setFrame(_ rect: CGRect, on window: AXUIElement) {
+        // Set size first, then position, then size again. This order handles
+        // cross-screen moves in both directions: when moving to a smaller screen
+        // the first resize prevents the window server from clamping the position;
+        // the second resize corrects any clamping that happened during the move
+        // to a larger screen. This is the same strategy used by Rectangle.
+        var size = rect.size
+        if let sizeVal = AXValueCreate(.cgSize, &size) {
+            AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
+        }
         var origin = rect.origin
         if let posVal = AXValueCreate(.cgPoint, &origin) {
             AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posVal)
         }
-        var size = rect.size
         if let sizeVal = AXValueCreate(.cgSize, &size) {
             AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
         }

@@ -52,7 +52,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
     if: ${{ needs.create-release.outputs.release_created == 'true' }}
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
@@ -86,11 +86,11 @@ jobs:
       - name: Attach zip to draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
         run: |
-          TAG="${{ needs.create-release.outputs.tag_name }}"
           VERSIONED_DMG="mcmac-window-${TAG}.dmg"
           VERSIONED_ZIP="mcmac-window-${TAG}.zip"
-          mv "${{ env.DMG_NAME }}" "${VERSIONED_DMG}"
+          mv "${DMG_NAME}" "${VERSIONED_DMG}"
           # ditto with --rsrc preserves the resource fork in the zip so the
           # DMG file icon (set by make_dmg.sh) survives extraction on macOS.
           ditto -c -k --keepParent --rsrc "${VERSIONED_DMG}" "${VERSIONED_ZIP}"
@@ -100,8 +100,9 @@ jobs:
       - name: Publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
         run: |
-          gh release edit "${{ needs.create-release.outputs.tag_name }}" \
+          gh release edit "${TAG}" \
             --draft=false \
             --repo "${{ github.repository }}"
 
@@ -120,12 +121,12 @@ jobs:
     steps:
       - name: Get Token
         id: get_workflow_token
-        uses: peter-murray/workflow-application-token-action@v4
+        uses: peter-murray/workflow-application-token-action@d17e3a9a36850ea89f35db16c1067dd2b68ee343 # v4
         with:
           application_id: ${{ secrets.APPLICATION_ID }}
           application_private_key: ${{ secrets.APPLICATION_PRIVATE_KEY }}
 
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
         with:
           token: ${{ steps.get_workflow_token.outputs.token }}
           config-file: release-please-config.json

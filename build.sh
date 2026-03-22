@@ -13,16 +13,16 @@ SOURCES=(
 )
 FRAMEWORKS=(-framework AppKit -framework ApplicationServices -framework Carbon)
 
-OPT_FLAG="-O"
+OPT_FLAGS=(-O)
 EXTRA_FLAGS=()
 for arg in "$@"; do
     case "$arg" in
-        --debug)            OPT_FLAG="-Onone -g"; echo "→ Debug build" ;;
+        --debug)            OPT_FLAGS=(-Onone -g); echo "→ Debug build" ;;
         --warnings-as-errors) EXTRA_FLAGS+=("-warnings-as-errors"); echo "→ Warnings as errors" ;;
         *) echo "Unknown flag: $arg" >&2; exit 1 ;;
     esac
 done
-if [[ ${#EXTRA_FLAGS[@]} -eq 0 && "$OPT_FLAG" == "-O" ]]; then
+if [[ ${#EXTRA_FLAGS[@]} -eq 0 && "${OPT_FLAGS[0]}" == "-O" ]]; then
     echo "→ Release build"
 fi
 
@@ -32,7 +32,7 @@ RESOURCES="$CONTENTS/Resources"
 mkdir -p "$MACOS" "$RESOURCES"
 
 echo "→ Compiling…"
-swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "$OPT_FLAG" ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} -o "$MACOS/$BINARY_NAME"
+swiftc "${SOURCES[@]}" "${FRAMEWORKS[@]}" "${OPT_FLAGS[@]}" ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} -o "$MACOS/$BINARY_NAME"
 
 echo "→ Copying Info.plist…"
 cp Info.plist "$CONTENTS/Info.plist"

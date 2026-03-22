@@ -33,7 +33,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             cleanup.launchPath = "/usr/bin/tccutil"
             cleanup.arguments  = ["reset", "Accessibility", "com.example.mcmac-window"]
             try? cleanup.run()
-            UserDefaults.standard.set(true, forKey: "legacyBundleIDCleaned")
+            cleanup.waitUntilExit()
+            if cleanup.terminationStatus == 0 {
+                UserDefaults.standard.set(true, forKey: "legacyBundleIDCleaned")
+            }
         }
     }
 
@@ -195,7 +198,9 @@ The app will relaunch automatically and prompt for permission again.
         let bundlePath = Bundle.main.bundleURL.path
         let relaunch = Process()
         relaunch.launchPath = "/bin/sh"
-        relaunch.arguments  = ["-c", "sleep 1 && open '\(bundlePath)'"]
+        relaunch.arguments  = ["-c", "sleep 1 && open \"$MCMAC_RELAUNCH_PATH\""]
+        relaunch.environment = ProcessInfo.processInfo.environment.merging(
+            ["MCMAC_RELAUNCH_PATH": bundlePath]) { _, new in new }
         try? relaunch.run()
         NSApp.terminate(nil)
     }
@@ -327,10 +332,28 @@ extension AppDelegate {
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = Pipe()
-        try? task.run()
+        do {
+            try task.run()
+        } catch {
+            let errAlert = NSAlert()
+            errAlert.messageText = "Export Failed"
+            errAlert.informativeText = "Could not run the log command: \(error.localizedDescription)"
+            errAlert.addButton(withTitle: "OK")
+            errAlert.runModal()
+            return
+        }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         task.waitUntilExit()
-        try? data.write(to: url)
+        do {
+            try data.write(to: url)
+        } catch {
+            let errAlert = NSAlert()
+            errAlert.messageText = "Export Failed"
+            errAlert.informativeText = "Could not write log file: \(error.localizedDescription)"
+            errAlert.addButton(withTitle: "OK")
+            errAlert.runModal()
+            return
+        }
         NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: "")
     }
 }

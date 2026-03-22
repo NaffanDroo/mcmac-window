@@ -45,41 +45,46 @@ cp -r "$BUNDLE" "$MOUNT_PT/$APP_NAME"
 
 # ── 4. Finder layout ─────────────────────────────────────────────────────────
 echo "→ Setting Finder layout…"
-osascript << APPLESCRIPT
-tell application "Finder"
-    tell disk "$STAGING_NAME"
-        -- Create the Applications alias
-        set appsAlias to make new alias to POSIX file "/Applications" at POSIX file "$MOUNT_PT/"
-        set name of appsAlias to "Applications"
+osascript - "$STAGING_NAME" "$MOUNT_PT" "$APP_NAME" << 'APPLESCRIPT'
+on run argv
+    set stagingName to item 1 of argv
+    set mountPt to item 2 of argv
+    set appName to item 3 of argv
+    tell application "Finder"
+        tell disk stagingName
+            -- Create the Applications alias
+            set appsAlias to make new alias to POSIX file "/Applications" at POSIX file (mountPt & "/")
+            set name of appsAlias to "Applications"
 
-        -- Initial pass: window chrome + icon size
-        open
-        set win to container window
-        set current view of win to icon view
-        set toolbar visible of win to false
-        set statusbar visible of win to false
-        set bounds of win to {200, 120, 740, 440}
-        set opts to icon view options of win
-        set icon size of opts to 80
-        set arrangement of opts to not arranged
-        close
+            -- Initial pass: window chrome + icon size
+            open
+            set win to container window
+            set current view of win to icon view
+            set toolbar visible of win to false
+            set statusbar visible of win to false
+            set bounds of win to {200, 120, 740, 440}
+            set opts to icon view options of win
+            set icon size of opts to 80
+            set arrangement of opts to not arranged
+            close
 
-        -- Second pass: position icons
-        open
-        delay 2
-        set position of item "$APP_NAME" of container window to {140, 160}
-        try
-            set position of item "Applications" of container window to {400, 160}
-        on error
+            -- Second pass: position icons
+            open
+            delay 2
+            set position of item appName of container window to {140, 160}
             try
-                set position of alias file "Applications" of container window to {400, 160}
+                set position of item "Applications" of container window to {400, 160}
+            on error
+                try
+                    set position of alias file "Applications" of container window to {400, 160}
+                end try
             end try
-        end try
-        update without registering applications
-        delay 1
-        close
+            update without registering applications
+            delay 1
+            close
+        end tell
     end tell
-end tell
+end run
 APPLESCRIPT
 
 # ── 5. Volume icon — set AFTER Finder layout so Finder doesn't remove the file
@@ -107,10 +112,14 @@ hdiutil convert "$TMP_DMG" -format UDZO -o "$DMG" -quiet
 # "use framework") which is always available — no PyObjC dependency needed.
 DMG_ABS="$(cd "$(dirname "$DMG")" && pwd)/$(basename "$DMG")"
 ICNS_ABS="$(cd "$(dirname "Resources/AppIcon.icns")" && pwd)/AppIcon.icns"
-osascript << APPLESCRIPT
+osascript - "$ICNS_ABS" "$DMG_ABS" << 'APPLESCRIPT'
 use framework "AppKit"
-set theImage to current application's NSImage's alloc()'s initWithContentsOfFile_("${ICNS_ABS}")
-current application's NSWorkspace's sharedWorkspace()'s setIcon_forFile_options_(theImage, "${DMG_ABS}", 0)
+on run argv
+    set icnsPath to item 1 of argv
+    set dmgPath to item 2 of argv
+    set theImage to current application's NSImage's alloc()'s initWithContentsOfFile_(icnsPath)
+    current application's NSWorkspace's sharedWorkspace()'s setIcon_forFile_options_(theImage, dmgPath, 0)
+end run
 APPLESCRIPT
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────

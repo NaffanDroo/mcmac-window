@@ -97,20 +97,23 @@ fi
 echo ""
 echo "── Icon positions ───────────────────────────────"
 
-POSITIONS=$(osascript 2>/dev/null << APPLESCRIPT || echo "error"
-tell application "Finder"
-    tell disk "$DISK_NAME"
-        open
-        delay 1
-        set appPos  to position of item "McMac Window.app" of container window
-        set appsPos to position of item "Applications"     of container window
-        close
-        return ((item 1 of appPos) as text) & "," & ¬
-               ((item 2 of appPos) as text) & "," & ¬
-               ((item 1 of appsPos) as text) & "," & ¬
-               ((item 2 of appsPos) as text)
+POSITIONS=$(osascript - "$DISK_NAME" 2>/dev/null << 'APPLESCRIPT' || echo "error"
+on run argv
+    set diskName to item 1 of argv
+    tell application "Finder"
+        tell disk diskName
+            open
+            delay 1
+            set appPos  to position of item "McMac Window.app" of container window
+            set appsPos to position of item "Applications"     of container window
+            close
+            return ((item 1 of appPos) as text) & "," & ¬
+                   ((item 2 of appPos) as text) & "," & ¬
+                   ((item 1 of appsPos) as text) & "," & ¬
+                   ((item 2 of appsPos) as text)
+        end tell
     end tell
-end tell
+end run
 APPLESCRIPT
 )
 

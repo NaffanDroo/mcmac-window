@@ -90,7 +90,7 @@ The bundle must be signed (even with ad-hoc `-`) so the bundle identifier (`org.
 
 ### Logging
 
-Both `WindowMover.swift` and `HotkeyManager.swift` log to `/tmp/mcmac-window.log`. Use `tail -f /tmp/mcmac-window.log` to debug live. Log with the file-local helpers `mlog()` / `hlog()`.
+Both `WindowMover.swift` and `HotkeyManager.swift` log via `OSLog` (subsystem `org.nathandrew.mcmac-window`). View live logs with `log stream --predicate 'subsystem == "org.nathandrew.mcmac-window"' --level debug`. The app's menu bar also provides "Open Logs in Console…" and "Export Logs…" options.
 
 ## Adding a New Snap Action (checklist)
 
