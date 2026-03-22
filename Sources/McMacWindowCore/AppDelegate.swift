@@ -6,7 +6,7 @@ private enum UDKey {
     static let ignoredBundleIDs = "ignoredBundleIDs"
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+public class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem?
     private var accessibilityMenuItem: NSMenuItem?
@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var ignoreMenuItem: NSMenuItem?
     private var manageIgnoredMenuItem: NSMenuItem?
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    public func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         HotkeyManager.shared.register()
         // Silently prompt the OS permission sheet (no custom alert).
@@ -376,7 +376,7 @@ extension AppDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     // Refresh dynamic menu items each time the menu opens.
-    func menuWillOpen(_ menu: NSMenu) {
+    public func menuWillOpen(_ menu: NSMenu) {
         updateAccessibilityMenuItem()
         updatePauseMenuItem()
         updateIgnoreMenuItem()

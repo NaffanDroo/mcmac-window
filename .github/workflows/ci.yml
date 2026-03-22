@@ -28,9 +28,9 @@ jobs:
 
       - name: Test
         run: ./test.sh
-        # Geometry tests run fully. WindowMover integration tests require a
-        # real screen and Accessibility permission; they skip gracefully in
-        # headless CI via `try skip(...)` and do not fail the suite.
+        # Geometry tests run fully. WindowMover integration tests require
+        # Accessibility permission; they skip gracefully in headless CI
+        # via XCTSkip and do not fail the suite.
 
       - name: Create DMG
         run: ./scripts/make_dmg.sh

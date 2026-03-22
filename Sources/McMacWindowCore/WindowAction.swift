@@ -1,4 +1,4 @@
-enum WindowAction: String {
+public enum WindowAction: String {
     case leftHalf       = "Left Half"
     case rightHalf      = "Right Half"
     case topHalf        = "Top Half"

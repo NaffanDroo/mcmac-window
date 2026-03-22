@@ -1,12 +1,19 @@
 import CoreGraphics
 
-typealias ScreenInfo = (frame: CGRect, visibleFrame: CGRect)
+public struct ScreenInfo {
+    public let frame: CGRect
+    public let visibleFrame: CGRect
+    public init(frame: CGRect, visibleFrame: CGRect) {
+        self.frame = frame
+        self.visibleFrame = visibleFrame
+    }
+}
 
 // MARK: - Coordinate conversion
 
 /// Converts a rect from NSScreen/AppKit coordinates (bottom-left origin, y-up)
 /// into AX coordinates (top-left origin, y-down).
-func axRect(from nsRect: CGRect, primaryScreenHeight ph: CGFloat) -> CGRect {
+public func axRect(from nsRect: CGRect, primaryScreenHeight ph: CGFloat) -> CGRect {
     let axY = ph - (nsRect.origin.y + nsRect.height)
     return CGRect(x: nsRect.origin.x, y: axY, width: nsRect.width, height: nsRect.height)
 }
@@ -14,7 +21,7 @@ func axRect(from nsRect: CGRect, primaryScreenHeight ph: CGFloat) -> CGRect {
 // MARK: - Push-through support
 
 /// Direction used for cross-screen push-through.
-enum SnapDirection: Equatable {
+public enum SnapDirection: Equatable {
     case left, right, up, down
 }
 
@@ -22,7 +29,7 @@ enum SnapDirection: Equatable {
 /// is already at the target position and the user presses the hotkey again.
 /// Returns nil for actions that have no meaningful push-through (maximize, center,
 /// cycling thirds — these either fill the screen or already cycle internally).
-func pushThrough(for action: WindowAction) -> (action: WindowAction, direction: SnapDirection)? {
+public func pushThrough(for action: WindowAction) -> (action: WindowAction, direction: SnapDirection)? {
     switch action {
     case .leftHalf:      return (.rightHalf,     .left)
     case .rightHalf:     return (.leftHalf,      .right)
@@ -41,7 +48,7 @@ func pushThrough(for action: WindowAction) -> (action: WindowAction, direction: 
 /// Finds the screen immediately adjacent in the given direction.
 /// Uses AppKit visibleFrame midpoints for direction detection so the result
 /// is robust to irregular dock/menubar insets that prevent frames from touching.
-func adjacentScreen(to currentVF: CGRect, direction: SnapDirection, among screens: [ScreenInfo]) -> ScreenInfo? {
+public func adjacentScreen(to currentVF: CGRect, direction: SnapDirection, among screens: [ScreenInfo]) -> ScreenInfo? {
     switch direction {
     case .left:
         return screens
@@ -65,7 +72,7 @@ func adjacentScreen(to currentVF: CGRect, direction: SnapDirection, among screen
 
 /// Returns true when two AX-coordinate rects are within `tolerance` pixels on
 /// every dimension. Used to detect when a window is already at its snap target.
-func rectsMatch(_ a: CGRect, _ b: CGRect, tolerance: CGFloat = 2) -> Bool {
+public func rectsMatch(_ a: CGRect, _ b: CGRect, tolerance: CGFloat = 2) -> Bool {
     abs(a.origin.x    - b.origin.x)    <= tolerance &&
     abs(a.origin.y    - b.origin.y)    <= tolerance &&
     abs(a.size.width  - b.size.width)  <= tolerance &&
@@ -76,7 +83,7 @@ func rectsMatch(_ a: CGRect, _ b: CGRect, tolerance: CGFloat = 2) -> Bool {
 
 /// Returns the visibleFrame of the screen that contains `axPoint`.
 /// Falls back to the first screen's visibleFrame when no screen matches.
-func screenContaining(axPoint: CGPoint, screens: [ScreenInfo], primaryScreenHeight ph: CGFloat) -> CGRect {
+public func screenContaining(axPoint: CGPoint, screens: [ScreenInfo], primaryScreenHeight ph: CGFloat) -> CGRect {
     let appKitPoint = CGPoint(x: axPoint.x, y: ph - axPoint.y)
     let match = screens.first { $0.frame.contains(appKitPoint) }
     return match?.visibleFrame ?? screens.first?.visibleFrame ?? .zero
@@ -85,7 +92,7 @@ func screenContaining(axPoint: CGPoint, screens: [ScreenInfo], primaryScreenHeig
 // MARK: - Target rect
 
 /// Computes the destination frame (in AX coordinates) for a snap action.
-func computeTargetRect(
+public func computeTargetRect(
     action: WindowAction,
     visibleFrame vf: CGRect,
     primaryScreenHeight ph: CGFloat,

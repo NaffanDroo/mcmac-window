@@ -47,9 +47,9 @@ private let S  = UInt32(shiftKey)
 
 private let kHotKeySignature: OSType = 0x6D776B6D
 
-class HotkeyManager {
+public class HotkeyManager {
 
-    static let shared = HotkeyManager()
+    public static let shared = HotkeyManager()
     private init() {}
 
     private var hotKeyRefs: [EventHotKeyRef?] = []
@@ -79,7 +79,7 @@ class HotkeyManager {
         Binding(keyCode: Key.c,          carbonMods: C|O, action: .center,         display: "⌃⌥ C   Center",           group: .special),
     ]
 
-    func register() {
+    public func register() {
         var eventSpec = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind:  UInt32(kEventHotKeyPressed)
@@ -115,7 +115,7 @@ class HotkeyManager {
         logger.info("hotkey registration complete")
     }
 
-    func unregister() {
+    public func unregister() {
         for ref in hotKeyRefs { if let r = ref { UnregisterEventHotKey(r) } }
         hotKeyRefs.removeAll()
         if let h = eventHandlerRef { RemoveEventHandler(h); eventHandlerRef = nil }
@@ -140,7 +140,7 @@ class HotkeyManager {
         return noErr
     }
 
-    func shortcutDescriptions() -> [String] {
+    public func shortcutDescriptions() -> [String] {
         var result: [String] = []
         var lastGroup: Group?
         for binding in bindings {
