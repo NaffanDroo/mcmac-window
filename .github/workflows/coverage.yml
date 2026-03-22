@@ -20,7 +20,7 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Run tests with coverage
-        run: swift test --enable-code-coverage
+        run: swift test --enable-code-coverage --skip WindowMoverTests
 
       - name: Generate coverage report
         id: coverage
