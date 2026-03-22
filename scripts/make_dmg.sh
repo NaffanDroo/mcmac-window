@@ -113,10 +113,10 @@ hdiutil convert "$TMP_DMG" -format UDZO -o "$DMG" -quiet
 DMG_ABS="$(cd "$(dirname "$DMG")" && pwd)/$(basename "$DMG")"
 ICNS_ABS="$(cd "$(dirname "Resources/AppIcon.icns")" && pwd)/AppIcon.icns"
 osascript - "$ICNS_ABS" "$DMG_ABS" << 'APPLESCRIPT'
+use framework "AppKit"
 on run argv
     set icnsPath to item 1 of argv
     set dmgPath to item 2 of argv
-    use framework "AppKit"
     set theImage to current application's NSImage's alloc()'s initWithContentsOfFile_(icnsPath)
     current application's NSWorkspace's sharedWorkspace()'s setIcon_forFile_options_(theImage, dmgPath, 0)
 end run
