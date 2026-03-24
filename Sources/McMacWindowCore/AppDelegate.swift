@@ -42,26 +42,32 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Menu bar icon
 
-    /// Draws a 18×18 pt template image matching the app icon's split-panel motif.
+    /// Draws a 18×18 pt template image matching the app icon's 2×2 grid motif.
     /// Rendered as a template so macOS applies correct tinting in light/dark mode.
     private func makeMenuBarImage() -> NSImage {
         let pt: CGFloat = 18
         let image = NSImage(size: NSSize(width: pt, height: pt), flipped: false) { _ in
-            let pad: CGFloat = 1.0
+            let pad: CGFloat = 1.5
             let gap: CGFloat = 1.5
-            let cr:  CGFloat = 2.0
-            let panelH = pt - pad * 2
-            let panelW = (pt - pad * 2 - gap) / 2
+            let cr:  CGFloat = 1.5
+            let gridW = pt - pad * 2
+            let cell = (gridW - gap) / 2
 
-            // Left panel — solid (active window)
-            let leftRect = NSRect(x: pad, y: pad, width: panelW, height: panelH)
-            NSColor.black.setFill()
-            NSBezierPath(roundedRect: leftRect, xRadius: cr, yRadius: cr).fill()
-
-            // Right panel — ghost (inactive side), matches app icon's translucent panel
-            let rightRect = NSRect(x: pad + panelW + gap, y: pad, width: panelW, height: panelH)
-            NSColor.black.withAlphaComponent(0.28).setFill()
-            NSBezierPath(roundedRect: rightRect, xRadius: cr, yRadius: cr).fill()
+            // 2×2 grid — top-left is solid (active), others are ghost
+            for row in 0...1 {
+                for col in 0...1 {
+                    let x = pad + CGFloat(col) * (cell + gap)
+                    let y = pad + CGFloat(row) * (cell + gap)
+                    let rect = NSRect(x: x, y: y, width: cell, height: cell)
+                    let isActive = col == 0 && row == 1  // top-left visually
+                    if isActive {
+                        NSColor.black.setFill()
+                    } else {
+                        NSColor.black.withAlphaComponent(0.28).setFill()
+                    }
+                    NSBezierPath(roundedRect: rect, xRadius: cr, yRadius: cr).fill()
+                }
+            }
 
             return true
         }

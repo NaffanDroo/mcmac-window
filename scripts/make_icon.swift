@@ -1,8 +1,9 @@
 #!/usr/bin/env swift
 /// Generates Resources/AppIcon.icns for mcmac-window.
 ///
-/// Design: deep blue-grey gradient background, two white rounded rectangles
-/// (left solid, right ghosted) representing a window snapped to the left half.
+/// Design: deep blue-grey gradient background, 2×2 grid of rounded cells.
+/// The top-left cell is solid white with a soft blue glow (the active snap
+/// zone); the remaining three cells are dim outlines.
 /// Run once and commit the output; build.sh copies it into the bundle.
 ///
 /// Usage: swift scripts/make_icon.swift
@@ -20,7 +21,6 @@ func makeIcon(size: CGFloat) -> CGImage {
         bitsPerComponent: 8, bytesPerRow: 0, space: cs, bitmapInfo: bits.rawValue
     ) else { fatalError("Could not create CGContext") }
 
-    // AppKit icon canvas: origin bottom-left
     ctx.saveGState()
 
     // Background gradient — deep navy top → charcoal bottom
@@ -38,38 +38,43 @@ func makeIcon(size: CGFloat) -> CGImage {
         options: []
     )
 
-    // Panel geometry — two equal columns with a gap
-    let pad:    CGFloat = size * 0.10
-    let gap:    CGFloat = size * 0.036
-    let panelH: CGFloat = size * 0.64
-    let panelY: CGFloat = (size - panelH) / 2
-    let panelW: CGFloat = (size - pad * 2 - gap) / 2
-    let cr:     CGFloat = size * 0.048   // corner radius
+    // Grid geometry — 2×2 with gap
+    let pad:  CGFloat = size * 0.17
+    let gap:  CGFloat = size * 0.05
+    let gridW = size - pad * 2
+    let cell  = (gridW - gap) / 2
+    let cr:   CGFloat = size * 0.036
 
-    // Left panel — active, solid white
-    let leftRect = CGRect(x: pad, y: panelY, width: panelW, height: panelH)
-    ctx.addPath(CGPath(roundedRect: leftRect, cornerWidth: cr, cornerHeight: cr, transform: nil))
-    ctx.setFillColor(CGColor(red: 0.95, green: 0.97, blue: 1.00, alpha: 0.96))
-    ctx.fillPath()
+    // Grid positions: (col, row) — row 0 = bottom in CG coords
+    for row in 0...1 {
+        for col in 0...1 {
+            let x = pad + CGFloat(col) * (cell + gap)
+            let y = pad + CGFloat(row) * (cell + gap)
+            let rect = CGRect(x: x, y: y, width: cell, height: cell)
+            let isActive = col == 0 && row == 1  // top-left visually
 
-    // Subtle top-edge highlight on left panel (gives it depth)
-    let hlH: CGFloat = size * 0.006
-    let hlRect = CGRect(x: leftRect.minX + cr, y: leftRect.maxY - hlH,
-                        width: leftRect.width - cr * 2, height: hlH)
-    ctx.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55))
-    ctx.fill(hlRect)
-
-    // Right panel — inactive, semi-transparent
-    let rightRect = CGRect(x: pad + panelW + gap, y: panelY, width: panelW, height: panelH)
-    ctx.addPath(CGPath(roundedRect: rightRect, cornerWidth: cr, cornerHeight: cr, transform: nil))
-    ctx.setFillColor(CGColor(red: 0.85, green: 0.92, blue: 1.00, alpha: 0.14))
-    ctx.fillPath()
-
-    // Right panel border
-    ctx.addPath(CGPath(roundedRect: rightRect, cornerWidth: cr, cornerHeight: cr, transform: nil))
-    ctx.setStrokeColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.22))
-    ctx.setLineWidth(size * 0.003)
-    ctx.strokePath()
+            if isActive {
+                // Glow behind active cell
+                ctx.saveGState()
+                ctx.setShadow(offset: .zero, blur: size * 0.06,
+                              color: CGColor(red: 0.50, green: 0.72, blue: 1.0, alpha: 0.45))
+                ctx.setFillColor(CGColor(red: 0.93, green: 0.96, blue: 1.00, alpha: 0.92))
+                ctx.addPath(CGPath(roundedRect: rect, cornerWidth: cr, cornerHeight: cr, transform: nil))
+                ctx.fillPath()
+                ctx.restoreGState()
+            } else {
+                // Faint fill
+                ctx.setFillColor(CGColor(red: 0.85, green: 0.92, blue: 1.00, alpha: 0.06))
+                ctx.addPath(CGPath(roundedRect: rect, cornerWidth: cr, cornerHeight: cr, transform: nil))
+                ctx.fillPath()
+                // Border
+                ctx.setStrokeColor(CGColor(red: 0.85, green: 0.92, blue: 1.00, alpha: 0.22))
+                ctx.setLineWidth(size * 0.005)
+                ctx.addPath(CGPath(roundedRect: rect, cornerWidth: cr, cornerHeight: cr, transform: nil))
+                ctx.strokePath()
+            }
+        }
+    }
 
     ctx.restoreGState()
     guard let img = ctx.makeImage() else { fatalError("makeImage() returned nil") }
