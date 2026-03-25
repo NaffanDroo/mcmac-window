@@ -163,6 +163,28 @@ class PushThroughTests: XCTestCase {
                                   CGRect(x: 14, y: 20, width: 960, height: 540), tolerance: 2))
     }
 
+    func testRectsMatchZeroTolerance() {
+        XCTAssertTrue(rectsMatch(CGRect(x: 5, y: 5, width: 100, height: 100),
+                                 CGRect(x: 5, y: 5, width: 100, height: 100), tolerance: 0))
+        XCTAssertFalse(rectsMatch(CGRect(x: 5, y: 5, width: 100, height: 100),
+                                  CGRect(x: 5, y: 5, width: 100, height: 101), tolerance: 0))
+    }
+
+    func testRectsMatchFailsOnYDifference() {
+        XCTAssertFalse(rectsMatch(CGRect(x: 0, y: 0, width: 100, height: 100),
+                                  CGRect(x: 0, y: 5, width: 100, height: 100), tolerance: 2))
+    }
+
+    func testRectsMatchFailsOnWidthDifference() {
+        XCTAssertFalse(rectsMatch(CGRect(x: 0, y: 0, width: 100, height: 100),
+                                  CGRect(x: 0, y: 0, width: 106, height: 100), tolerance: 2))
+    }
+
+    func testRectsMatchFailsOnHeightDifference() {
+        XCTAssertFalse(rectsMatch(CGRect(x: 0, y: 0, width: 100, height: 100),
+                                  CGRect(x: 0, y: 0, width: 100, height: 106), tolerance: 2))
+    }
+
     // MARK: - Target rect on adjacent screen
 
     func testPushThroughLeftHalfOfBToRightHalfOfA() {

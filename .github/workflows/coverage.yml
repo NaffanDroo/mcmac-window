@@ -29,16 +29,20 @@ jobs:
           PROFDATA="$(find .build -name default.profdata -type f | head -1)"
           TEST_BIN="$BIN_PATH/McMacWindowPackageTests.xctest/Contents/MacOS/McMacWindowPackageTests"
 
+          # Exclude test files, build artefacts, and UI/system code that
+          # requires a running app (AppDelegate, AppDelegatePanels).
+          EXCLUDE='\.build|Tests/|AppDelegate|AppDelegatePanels'
+
           # JSON export for parsing
           xcrun llvm-cov export "$TEST_BIN" \
             -instr-profile="$PROFDATA" \
-            -ignore-filename-regex='\.build|Tests/' \
+            -ignore-filename-regex="$EXCLUDE" \
             -format=text > coverage.json
 
           # Human-readable report
           REPORT=$(xcrun llvm-cov report "$TEST_BIN" \
             -instr-profile="$PROFDATA" \
-            -ignore-filename-regex='\.build|Tests/')
+            -ignore-filename-regex="$EXCLUDE")
 
           # Extract total line coverage percentage
           TOTAL=$(echo "$REPORT" | tail -1 | awk '{for(i=1;i<=NF;i++) if($i ~ /^[0-9]+\.[0-9]+%$/) last=$i} END{print last}')

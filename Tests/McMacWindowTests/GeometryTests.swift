@@ -239,6 +239,10 @@ class GeometryTests: XCTestCase {
                        single[0].visibleFrame)
     }
 
+    func testScreenContainingEmptyScreensReturnsZero() {
+        XCTAssertEqual(screenContaining(axPoint: CGPoint(x: 100, y: 50), screens: [], primaryScreenHeight: ph), .zero)
+    }
+
     // MARK: - Non-regression
 
     func testLeftRightHalvesTouchNoGap() {
