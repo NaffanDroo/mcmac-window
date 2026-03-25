@@ -20,8 +20,8 @@ if [[ -z "$PROF" || -z "$BIN" ]]; then
 fi
 
 # Exclude test files, build artefacts, and UI/system code that requires
-# a running app (AppDelegate, HotkeyManager, AppDelegatePanels).
-EXCLUDE='Tests/|\.build/|AppDelegate|HotkeyManager|AppDelegatePanels'
+# a running app (AppDelegate, AppDelegatePanels).
+EXCLUDE='Tests/|\.build/|AppDelegate|AppDelegatePanels'
 
 echo "→ Generating lcov.info…"
 xcrun llvm-cov export "$BIN" \

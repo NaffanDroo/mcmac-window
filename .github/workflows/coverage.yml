@@ -30,8 +30,8 @@ jobs:
           TEST_BIN="$BIN_PATH/McMacWindowPackageTests.xctest/Contents/MacOS/McMacWindowPackageTests"
 
           # Exclude test files, build artefacts, and UI/system code that
-          # requires a running app (AppDelegate, HotkeyManager, AppDelegatePanels).
-          EXCLUDE='\.build|Tests/|AppDelegate|HotkeyManager|AppDelegatePanels'
+          # requires a running app (AppDelegate, AppDelegatePanels).
+          EXCLUDE='\.build|Tests/|AppDelegate|AppDelegatePanels'
 
           # JSON export for parsing
           xcrun llvm-cov export "$TEST_BIN" \
