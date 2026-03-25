@@ -1,10 +1,14 @@
+/// Registers global hotkeys via Carbon's `RegisterEventHotKey` API.
+///
+/// Carbon is used instead of `NSEvent.addGlobalMonitorForEvents` because
+/// the NSEvent API requires a separate Input Monitoring permission and
+/// fails silently when it is not granted. Carbon hotkeys only need the
+/// standard Accessibility permission that the app already requests.
 import AppKit
 import Carbon
 import OSLog
 
 private let logger = Logger(subsystem: "org.nathandrew.mcmac-window", category: "HotkeyManager")
-
-// WindowAction is defined in WindowAction.swift (no Carbon dependency)
 
 private enum Group: String {
     case halves   = "Halves"
@@ -45,6 +49,7 @@ private let O  = UInt32(optionKey)
 private let Cm = UInt32(cmdKey)
 private let S  = UInt32(shiftKey)
 
+/// Four-char code identifying our hotkeys in Carbon events (ASCII "mwkm").
 private let kHotKeySignature: OSType = 0x6D776B6D
 
 public class HotkeyManager {
