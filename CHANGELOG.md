@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.0...v0.6.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* move x-release-please-version marker to same line as version string ([#64](https://github.com/NaffanDroo/mcmac-window/issues/64)) ([7a4a370](https://github.com/NaffanDroo/mcmac-window/commit/7a4a370ebdbdcf0b58af9b115e9b255f4afa28f4))
+
 ## [0.6.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.2...v0.6.0) (2026-03-25)
 
 
