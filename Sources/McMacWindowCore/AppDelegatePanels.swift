@@ -15,6 +15,7 @@ extension AppDelegate {
         into place with a hotkey.
 
         Author: Nathan Drew
+        MIT License
         https://github.com/NaffanDroo/mcmac-window
         """
         alert.alertStyle = .informational
