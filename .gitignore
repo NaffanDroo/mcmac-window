@@ -26,6 +26,9 @@ xcuserdata/
 # Swift Package Manager
 .build/
 
+# Coverage
+lcov.info
+
 # Editor
 .vscode/
 .idea/
