@@ -19,17 +19,21 @@ if [[ -z "$PROF" || -z "$BIN" ]]; then
     exit 1
 fi
 
+# Exclude test files, build artefacts, and UI/system code that requires
+# a running app (AppDelegate, HotkeyManager, AppDelegatePanels).
+EXCLUDE='Tests/|\.build/|AppDelegate|HotkeyManager|AppDelegatePanels'
+
 echo "→ Generating lcov.info…"
 xcrun llvm-cov export "$BIN" \
     -instr-profile "$PROF" \
     -format=lcov \
-    -ignore-filename-regex='Tests/|\.build/' \
+    -ignore-filename-regex="$EXCLUDE" \
     > lcov.info
 
 echo "→ Coverage summary:"
 xcrun llvm-cov report "$BIN" \
     -instr-profile "$PROF" \
-    -ignore-filename-regex='Tests/|\.build/'
+    -ignore-filename-regex="$EXCLUDE"
 
 echo ""
 echo "✓ lcov.info written — open in VS Code with Coverage Gutters"
