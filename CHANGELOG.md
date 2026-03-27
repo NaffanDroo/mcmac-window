@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.6.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.0...v0.6.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* move x-release-please-version marker to same line as version string ([#64](https://github.com/NaffanDroo/mcmac-window/issues/64)) ([7a4a370](https://github.com/NaffanDroo/mcmac-window/commit/7a4a370ebdbdcf0b58af9b115e9b255f4afa28f4))
+
+## [0.6.0](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.2...v0.6.0) (2026-03-25)
+
+
+### Features
+
+* add About McMac Window menu item and code documentation ([#61](https://github.com/NaffanDroo/mcmac-window/issues/61)) ([68bf109](https://github.com/NaffanDroo/mcmac-window/commit/68bf109100367f6ed4eb69887ae8579c076a04dc))
+* migrate to Swift Package Manager with XCTest and code coverage ([#58](https://github.com/NaffanDroo/mcmac-window/issues/58)) ([12fa11c](https://github.com/NaffanDroo/mcmac-window/commit/12fa11cee268d91c654a37530354bed935355dba))
+* replace split-panel icon with 2×2 grid design ([#59](https://github.com/NaffanDroo/mcmac-window/issues/59)) ([64477bb](https://github.com/NaffanDroo/mcmac-window/commit/64477bb6f5b58d2129870d1b4b6d39af49bdfdfe))
+
+
+### Documentation
+
+* add HotkeyManagerTests.swift to project structure in CLAUDE.md ([#63](https://github.com/NaffanDroo/mcmac-window/issues/63)) ([a7c593e](https://github.com/NaffanDroo/mcmac-window/commit/a7c593e2a9f6bb749de4ac691ff4e0ba9b685083))
+
+
+### Miscellaneous
+
+* add CODEOWNERS and dependabot for GitHub Actions ([#54](https://github.com/NaffanDroo/mcmac-window/issues/54)) ([cdb83c3](https://github.com/NaffanDroo/mcmac-window/commit/cdb83c3586284e289cb95089b9739762af9d3963))
+
 ## [0.5.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.5.1...v0.5.2) (2026-03-22)
 
 

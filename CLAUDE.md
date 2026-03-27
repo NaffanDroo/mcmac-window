@@ -47,6 +47,7 @@ Sources/
 Tests/
   McMacWindowTests/       — XCTest-based test target
     GeometryTests.swift   — unit tests for all geometry
+    HotkeyManagerTests.swift — unit tests for hotkey binding registration
     PushThroughTests.swift — push-through + adjacentScreen tests
     WindowMoverTests.swift — integration tests via own-process AX
 Resources/
