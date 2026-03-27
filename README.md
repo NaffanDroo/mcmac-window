@@ -7,6 +7,8 @@
 ![Swift](https://img.shields.io/badge/Swift-5-orange)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
 
+![McMac Window demo](docs/demo.gif)
+
 Inspired by [Rectangle](https://rectangleapp.com), built in pure Swift with a single `swiftc` invocation — no Xcode project, no package manager, no external dependencies.
 
 ## Requirements
@@ -121,6 +123,7 @@ Tests/
 Resources/
   AppIcon.icns           — app and DMG volume icon
 scripts/
+  make_demo_gif.sh       — records an animated demo GIF (requires ffmpeg)
   make_dmg.sh            — builds a distribution DMG
   test_dmg.sh            — verifies DMG layout and appearance
 Info.plist               — LSUIElement=true (no Dock icon)
