@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.1...v0.6.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* check AX movable/resizable before setting window frame ([#70](https://github.com/NaffanDroo/mcmac-window/issues/70)) ([95323d6](https://github.com/NaffanDroo/mcmac-window/commit/95323d682cea3a2b4521cb48a4d202cb4350e553))
+
+
+### Documentation
+
+* add animated demo GIF and recording script ([#68](https://github.com/NaffanDroo/mcmac-window/issues/68)) ([67c6fb1](https://github.com/NaffanDroo/mcmac-window/commit/67c6fb1843cb548bdcbfdb30d98d7a4a468517c3))
+
+
+### Miscellaneous
+
+* **deps:** bump actions/checkout from 4.3.1 to 6.0.2 ([#56](https://github.com/NaffanDroo/mcmac-window/issues/56)) ([3fe53cd](https://github.com/NaffanDroo/mcmac-window/commit/3fe53cdc19719cb4389245ea8a2a614c9c4a7d87))
+* **deps:** bump amannn/action-semantic-pull-request from 5 to 6 ([#57](https://github.com/NaffanDroo/mcmac-window/issues/57)) ([c3fc21d](https://github.com/NaffanDroo/mcmac-window/commit/c3fc21d169c472ba123848c96266eb4cc0f4b5cc))
+
 ## [0.6.1](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.0...v0.6.1) (2026-03-25)
 
 
