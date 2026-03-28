@@ -118,22 +118,69 @@ public class WindowMover {
         return size
     }
 
-    public func setFrame(_ rect: CGRect, on window: AXUIElement) {
-        // Set size first, then position, then size again. This order handles
-        // cross-screen moves in both directions: when moving to a smaller screen
-        // the first resize prevents the window server from clamping the position;
-        // the second resize corrects any clamping that happened during the move
-        // to a larger screen. This is the same strategy used by Rectangle.
+    /// Returns true when the window's AX element reports it can be moved.
+    /// Falls back to true when the attribute is absent (assume movable by default).
+    public func isMovable(_ window: AXUIElement) -> Bool {
+        var ref: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, "AXMovable" as CFString, &ref) == .success,
+              let val = ref else { return true }
+        return (val as? Bool) ?? true
+    }
+
+    /// Returns true when the window's AX element reports it can be resized.
+    /// Falls back to true when the attribute is absent (assume resizable by default).
+    public func isResizable(_ window: AXUIElement) -> Bool {
+        var ref: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, "AXResizable" as CFString, &ref) == .success,
+              let val = ref else { return true }
+        return (val as? Bool) ?? true
+    }
+
+    /// Sets the window frame via AX. Returns false if the window is not movable
+    /// or if the position write fails; the caller can log or surface the failure.
+    ///
+    /// When the window is not resizable (kAXResizableAttribute = false) the size
+    /// writes are skipped and the position write is still attempted — this handles
+    /// apps like Notes whose windows can be moved but not resized via AX.
+    ///
+    /// Set size first, then position, then size again. This order handles
+    /// cross-screen moves in both directions: when moving to a smaller screen
+    /// the first resize prevents the window server from clamping the position;
+    /// the second resize corrects any clamping that happened during the move
+    /// to a larger screen. This is the same strategy used by Rectangle.
+    @discardableResult
+    public func setFrame(_ rect: CGRect, on window: AXUIElement) -> Bool {
+        guard isMovable(window) else {
+            logger.warning("window is not movable (kAXMovableAttribute=false) — setFrame skipped")
+            return false
+        }
+
+        let canResize = isResizable(window)
+        if !canResize {
+            logger.info("window is not resizable (kAXResizableAttribute=false) — skipping size writes")
+        }
+
         var size = rect.size
-        if let sizeVal = AXValueCreate(.cgSize, &size) {
-            AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
+        if canResize, let sizeVal = AXValueCreate(.cgSize, &size) {
+            let err = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
+            if err != .success {
+                logger.warning("kAXSizeAttribute write failed: AXError \(err.rawValue, privacy: .public)")
+            }
         }
         var origin = rect.origin
         if let posVal = AXValueCreate(.cgPoint, &origin) {
-            AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posVal)
+            let err = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posVal)
+            if err != .success {
+                logger.warning("kAXPositionAttribute write failed: AXError \(err.rawValue, privacy: .public)")
+                return false
+            }
         }
-        if let sizeVal = AXValueCreate(.cgSize, &size) {
-            AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
+        if canResize, let sizeVal = AXValueCreate(.cgSize, &size) {
+            let err = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeVal)
+            if err != .success {
+                logger.warning("kAXSizeAttribute (2nd pass) write failed: AXError \(err.rawValue, privacy: .public)")
+            }
         }
+        return true
     }
 }

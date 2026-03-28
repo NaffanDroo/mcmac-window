@@ -165,6 +165,58 @@ class WindowMoverTests: XCTestCase {
         let lw = window.frame.width
         XCTAssertEqual(fw + cw + lw, visibleFrame.width, accuracy: 3, "thirds sum to full width")
     }
+
+    // MARK: - Non-responsive window tests (issue #69)
+
+    /// A normal resizable window should be reported as movable and resizable.
+    func testIsMovableAndResizableForNormalWindow() throws {
+        _ = try requireAXAndScreen()
+        let window = makeTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { throw XCTSkip("no AX element") }
+        XCTAssertTrue(WindowMover.shared.isMovable(ax), "standard titled+resizable window should be movable")
+        XCTAssertTrue(WindowMover.shared.isResizable(ax), "standard titled+resizable window should be resizable")
+    }
+
+    /// A window created without .resizable in its styleMask should report isResizable = false.
+    func testIsResizableReturnsFalseForNonResizableWindow() throws {
+        _ = try requireAXAndScreen()
+        let window = makeNonResizableTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { throw XCTSkip("no AX element") }
+        XCTAssertFalse(WindowMover.shared.isResizable(ax), "window without .resizable should report isResizable=false")
+    }
+
+    /// setFrame should return true when the AX writes succeed.
+    func testSetFrameReturnsTrueForNormalWindow() throws {
+        let visibleFrame = try requireAXAndScreen()
+        let window = makeTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { throw XCTSkip("no AX element") }
+        let primaryHeight = NSScreen.screens[0].frame.height
+        let axVF = axRect(from: visibleFrame, primaryScreenHeight: primaryHeight)
+        let target = CGRect(origin: CGPoint(x: axVF.minX + 50, y: axVF.minY + 50),
+                            size: CGSize(width: 600, height: 400))
+        let result = WindowMover.shared.setFrame(target, on: ax)
+        XCTAssertTrue(result, "setFrame should return true for a normal movable/resizable window")
+    }
+
+    /// For a non-resizable window, setFrame should still move the window (position write)
+    /// but not attempt to resize it, and should return true (position succeeded).
+    func testNonResizableWindowPositionIsStillUpdated() throws {
+        let visibleFrame = try requireAXAndScreen()
+        let window = makeNonResizableTestWindow(); defer { window.close() }
+        guard let ax = findAXWindow(titled: window.title) else { throw XCTSkip("no AX element") }
+        let originalSize = window.frame.size
+        let primaryHeight = NSScreen.screens[0].frame.height
+        let axVF = axRect(from: visibleFrame, primaryScreenHeight: primaryHeight)
+        let newOrigin = CGPoint(x: axVF.minX + 80, y: axVF.minY + 80)
+        let result = WindowMover.shared.setFrame(
+            CGRect(origin: newOrigin, size: CGSize(width: 800, height: 600)), on: ax)
+        pump()
+        XCTAssertTrue(result, "setFrame should return true even for non-resizable window (position write can still succeed)")
+        XCTAssertEqual(window.frame.origin.x, newOrigin.x, accuracy: 3, "x should be updated")
+        // Size should remain at the original (non-resizable window ignores resize)
+        XCTAssertEqual(window.frame.size.width, originalSize.width, accuracy: 3,
+                       "width should be unchanged for non-resizable window")
+    }
 }
 
 // MARK: - Helpers
@@ -179,6 +231,22 @@ private func makeTestWindow() -> NSWindow {
         backing: .buffered, defer: false
     )
     w.title = "mcmac-test-\(_counter)-\(ProcessInfo.processInfo.processIdentifier)"
+    w.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    pump(0.15)
+    return w
+}
+
+/// Creates a window without .resizable in its styleMask, simulating apps like Notes
+/// whose windows reject AX size writes (kAXResizableAttribute = false).
+private func makeNonResizableTestWindow() -> NSWindow {
+    _counter += 1
+    let w = NSWindow(
+        contentRect: NSRect(x: 300, y: 300, width: 500, height: 400),
+        styleMask: [.titled, .closable],
+        backing: .buffered, defer: false
+    )
+    w.title = "mcmac-test-noresize-\(_counter)-\(ProcessInfo.processInfo.processIdentifier)"
     w.makeKeyAndOrderFront(nil)
     NSApp.activate(ignoringOtherApps: true)
     pump(0.15)
