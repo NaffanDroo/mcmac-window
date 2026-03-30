@@ -50,7 +50,16 @@ public class MouseGestureManager {
     }
 
     func handleMouseMoved(dx: CGFloat) {
-        // implemented in Task 2
+        guard gestureButtonHeld else { return }
+
+        accumulatedDelta += dx
+        guard abs(accumulatedDelta) >= deltaThreshold else { return }
+
+        let direction: GestureDirection = accumulatedDelta > 0 ? .right : .left
+        logger.debug("gesture threshold reached: \(direction == .right ? "right" : "left", privacy: .public)")
+        switchAction(direction)
+        accumulatedDelta = 0
+        lastSwitchTime = Date()
     }
 
     // MARK: - Space switching (implemented in Task 5)

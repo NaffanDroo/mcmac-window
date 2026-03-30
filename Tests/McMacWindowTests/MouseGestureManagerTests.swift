@@ -47,4 +47,43 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.handleMouseUp(button: 3)
         XCTAssertEqual(manager.accumulatedDelta, 0)
     }
+
+    // MARK: - Delta accumulation
+
+    func testDeltaAccumulatesWhileButtonHeld() {
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 20)
+        manager.handleMouseMoved(dx: 15)
+        XCTAssertEqual(manager.accumulatedDelta, 35)
+    }
+
+    func testDeltaIgnoredWhenButtonNotHeld() {
+        manager.handleMouseMoved(dx: 100)
+        XCTAssertEqual(manager.accumulatedDelta, 0)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
+    func testRightThresholdTriggersSwitch() {
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(firedDirections, [.right])
+    }
+
+    func testLeftThresholdTriggersSwitch() {
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: -60)
+        XCTAssertEqual(firedDirections, [.left])
+    }
+
+    func testDeltaBelowThresholdDoesNotTrigger() {
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 59)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
+    func testDeltaResetsAfterTrigger() {
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(manager.accumulatedDelta, 0)
+    }
 }
