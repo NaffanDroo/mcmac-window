@@ -134,4 +134,17 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(firedDirections, [.right])
     }
+
+    // MARK: - CGEventTap (requires Accessibility permission)
+
+    func testStartCreatesTap() throws {
+        guard AXIsProcessTrustedWithOptions(nil) else {
+            throw XCTSkip("Accessibility permission not granted — skipping CGEventTap test")
+        }
+        let mgr = MouseGestureManager()
+        mgr.start()
+        XCTAssertEqual(mgr.eventTapIsEnabled, true)
+        mgr.stop()
+        XCTAssertNil(mgr.eventTapIsEnabled)
+    }
 }

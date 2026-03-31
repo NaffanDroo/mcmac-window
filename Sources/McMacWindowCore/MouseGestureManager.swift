@@ -70,12 +70,85 @@ public class MouseGestureManager {
         UserDefaults.standard.stringArray(forKey: "gestureEnabledBundleIDs") ?? []
     }
 
-    // MARK: - Space switching (implemented in Task 5)
+    // MARK: - Space switching
 
-    static func postSpaceSwitch(direction: GestureDirection) {}
+    static func postSpaceSwitch(direction: GestureDirection) {
+        let keyCode: CGKeyCode = direction == .right ? 124 : 123   // right / left arrow
+        let src = CGEventSource(stateID: .hidSystemState)
+        guard let down = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
+              let up   = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false)
+        else { return }
+        down.flags = .maskControl
+        up.flags   = .maskControl
+        down.post(tap: .cghidEventTap)
+        up.post(tap: .cghidEventTap)
+        logger.debug("posted space switch: \(direction == .right ? "right" : "left", privacy: .public)")
+    }
 
-    // MARK: - Event tap (implemented in Task 5)
+    // MARK: - Event tap
 
-    public func start() {}
-    public func stop() {}
+    public func start() {
+        if let stored = UserDefaults.standard.object(forKey: "gestureButtonIndex") as? Int {
+            gestureButtonIndex = stored
+        }
+
+        let eventMask: CGEventMask =
+            (1 << CGEventType.otherMouseDown.rawValue) |
+            (1 << CGEventType.otherMouseUp.rawValue)   |
+            (1 << CGEventType.otherMouseDragged.rawValue)
+
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        guard let tap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .listenOnly,
+            eventsOfInterest: eventMask,
+            callback: { _, type, event, userInfo -> Unmanaged<CGEvent>? in
+                guard let userInfo = userInfo else { return Unmanaged.passUnretained(event) }
+                let mgr = Unmanaged<MouseGestureManager>.fromOpaque(userInfo).takeUnretainedValue()
+                mgr.handleEvent(type: type, event: event)
+                return Unmanaged.passUnretained(event)
+            },
+            userInfo: selfPtr
+        ) else {
+            logger.error("CGEventTap creation failed — Accessibility permission likely not granted")
+            return
+        }
+
+        eventTap = tap
+        let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
+        runLoopSource = source
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        logger.info("MouseGestureManager started, monitoring button \(self.gestureButtonIndex)")
+    }
+
+    public func stop() {
+        if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: false) }
+        if let src = runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), src, .commonModes)
+        }
+        eventTap = nil
+        runLoopSource = nil
+        logger.info("MouseGestureManager stopped")
+    }
+
+    private func handleEvent(type: CGEventType, event: CGEvent) {
+        switch type {
+        case .otherMouseDown:
+            handleMouseDown(button: Int(event.getIntegerValueField(.mouseEventButtonNumber)))
+        case .otherMouseUp:
+            handleMouseUp(button: Int(event.getIntegerValueField(.mouseEventButtonNumber)))
+        case .otherMouseDragged:
+            handleMouseMoved(dx: CGFloat(event.getDoubleValueField(.mouseEventDeltaX)))
+        default:
+            break
+        }
+    }
+
+    /// Exposed for testing only — returns whether the tap exists and is enabled.
+    var eventTapIsEnabled: Bool? {
+        guard let tap = eventTap else { return nil }
+        return CGEvent.tapIsEnabled(tap: tap)
+    }
 }
