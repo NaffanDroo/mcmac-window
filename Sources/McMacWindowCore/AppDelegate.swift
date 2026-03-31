@@ -23,6 +23,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         HotkeyManager.shared.register()
+        MouseGestureManager.shared.start()
         // Silently prompt the OS permission sheet (no custom alert).
         // kAXTrustedCheckOptionPrompt triggers the system sheet only when
         // permission has never been granted; it is a no-op once trusted.
