@@ -7,6 +7,8 @@ private enum UDKey {
     static let snappingPaused   = "snappingPaused"
     /// `[String]` of bundle identifiers whose windows should not be snapped.
     static let ignoredBundleIDs = "ignoredBundleIDs"
+    /// `[String]` of bundle identifiers for which the mouse gesture is enabled.
+    static let gestureEnabledBundleIDs = "gestureEnabledBundleIDs"
 }
 
 /// Manages the menu-bar status item, Accessibility permission flow,
@@ -281,8 +283,8 @@ The app will relaunch automatically and prompt for permission again.
 
     // MARK: - Mouse gesture allowlist
 
-    private func gestureEnabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: "gestureEnabledBundleIDs") ?? [] }
-    private func setGestureEnabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: "gestureEnabledBundleIDs") }
+    private func gestureEnabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.gestureEnabledBundleIDs) ?? [] }
+    private func setGestureEnabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.gestureEnabledBundleIDs) }
 
     @objc private func toggleGestureCurrentApp() {
         guard let app = NSWorkspace.shared.frontmostApplication,

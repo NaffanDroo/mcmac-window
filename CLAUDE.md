@@ -216,3 +216,13 @@ screen** in that direction. For example:
 
 Actions without a directional mirror (`⌃⌥ ↩` maximize, `⌃⌥ C` center,
 and the static thirds) do not push through.
+
+### Mouse gesture desktop switching
+
+When enabled for a specific app, holding the Logitech MX gesture button (the button under the thumb) and moving the mouse left or right switches macOS desktops (Mission Control Spaces) via `⌃←` / `⌃→`.
+
+The feature is **opt-in per application**. Use "Enable Mouse Gesture for [App]" in the menu bar to add or remove the frontmost app from the allowlist. The gesture is suppressed when Snapping is paused.
+
+Configuration (via `UserDefaults`):
+- `gestureButtonIndex` (Int, default 3) — raw button number for the gesture button; override if your MX model reports a different value
+- `gestureEnabledBundleIDs` ([String]) — the per-app allowlist managed by the menu

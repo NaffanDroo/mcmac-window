@@ -61,7 +61,10 @@ public class MouseGestureManager {
 
         accumulatedDelta += dx
         guard abs(accumulatedDelta) >= deltaThreshold else { return }
-        if let last = lastSwitchTime, Date().timeIntervalSince(last) < cooldown { return }
+        if let last = lastSwitchTime, Date().timeIntervalSince(last) < cooldown {
+            accumulatedDelta = 0
+            return
+        }
 
         let direction: GestureDirection = accumulatedDelta > 0 ? .right : .left
         logger.debug("gesture threshold reached: \(direction == .right ? "right" : "left", privacy: .public)")

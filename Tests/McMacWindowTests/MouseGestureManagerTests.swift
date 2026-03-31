@@ -135,6 +135,13 @@ final class MouseGestureManagerTests: XCTestCase {
         XCTAssertEqual(firedDirections, [.right])
     }
 
+    func testCooldownResetsAccumulatedDelta() {
+        manager.lastSwitchTime = Date()   // cooldown active
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)  // threshold crossed but cooldown blocks
+        XCTAssertEqual(manager.accumulatedDelta, 0)  // delta should be reset
+    }
+
     // MARK: - CGEventTap (requires Accessibility permission)
 
     func testStartCreatesTap() throws {
@@ -146,5 +153,17 @@ final class MouseGestureManagerTests: XCTestCase {
         XCTAssertEqual(mgr.eventTapIsEnabled, true)
         mgr.stop()
         XCTAssertNil(mgr.eventTapIsEnabled)
+    }
+
+    func testDoubleStartIsNoop() throws {
+        guard AXIsProcessTrustedWithOptions(nil) else {
+            throw XCTSkip("Accessibility permission not granted — skipping CGEventTap test")
+        }
+        let mgr = MouseGestureManager()
+        mgr.start()
+        let tapAfterFirst = mgr.eventTapIsEnabled
+        mgr.start()   // second call should be a no-op
+        XCTAssertEqual(mgr.eventTapIsEnabled, tapAfterFirst)
+        mgr.stop()
     }
 }
