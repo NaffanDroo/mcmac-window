@@ -118,4 +118,20 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
     }
+
+    // MARK: - Cooldown
+
+    func testCooldownSuppressesImmediateRepeat() {
+        manager.lastSwitchTime = Date()   // simulate a switch that just fired
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
+    func testSwitchFiresAfterCooldownExpires() {
+        manager.lastSwitchTime = Date(timeIntervalSinceNow: -0.6)   // 600ms ago
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(firedDirections, [.right])
+    }
 }
