@@ -34,6 +34,10 @@ public class MouseGestureManager {
 
     init() {}
 
+    deinit {
+        stop()
+    }
+
     // MARK: - Button state
 
     func handleMouseDown(button: Int) {
@@ -88,6 +92,7 @@ public class MouseGestureManager {
     // MARK: - Event tap
 
     public func start() {
+        guard eventTap == nil else { return }
         if let stored = UserDefaults.standard.object(forKey: "gestureButtonIndex") as? Int {
             gestureButtonIndex = stored
         }
