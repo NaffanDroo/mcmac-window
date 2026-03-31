@@ -18,6 +18,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     private var pauseMenuItem: NSMenuItem?
     private var ignoreMenuItem: NSMenuItem?
     private var manageIgnoredMenuItem: NSMenuItem?
+    private var gestureMenuItem: NSMenuItem?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -136,6 +137,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         manageItem.target = self
         menu.addItem(manageItem)
         manageIgnoredMenuItem = manageItem
+
+        let gestureItem = NSMenuItem(title: "Enable Mouse Gesture for This App",
+                                     action: #selector(toggleGestureCurrentApp), keyEquivalent: "")
+        gestureItem.target = self
+        menu.addItem(gestureItem)
+        gestureMenuItem = gestureItem
         menu.addItem(.separator())
 
         let shortcutsItem = NSMenuItem(title: "Shortcuts…",
@@ -239,28 +246,17 @@ The app will relaunch automatically and prompt for permission again.
 
     // MARK: - Per-app ignore list
 
-    private func ignoredBundleIDs() -> [String] {
-        UserDefaults.standard.stringArray(forKey: UDKey.ignoredBundleIDs) ?? []
-    }
-
-    private func setIgnoredBundleIDs(_ ids: [String]) {
-        UserDefaults.standard.set(ids, forKey: UDKey.ignoredBundleIDs)
-    }
-
+    private func ignoredBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.ignoredBundleIDs) ?? [] }
+    private func setIgnoredBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.ignoredBundleIDs) }
     private func displayName(for bundleID: String) -> String {
-        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-            .first?.localizedName ?? bundleID
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.localizedName ?? bundleID
     }
 
     @objc private func toggleIgnoreCurrentApp() {
         guard let app = NSWorkspace.shared.frontmostApplication,
               let bundleID = app.bundleIdentifier else { return }
         var ids = ignoredBundleIDs()
-        if let idx = ids.firstIndex(of: bundleID) {
-            ids.remove(at: idx)
-        } else {
-            ids.append(bundleID)
-        }
+        if let idx = ids.firstIndex(of: bundleID) { ids.remove(at: idx) } else { ids.append(bundleID) }
         setIgnoredBundleIDs(ids)
     }
 
@@ -280,6 +276,36 @@ The app will relaunch automatically and prompt for permission again.
         let isIgnored = ignoredBundleIDs().contains(bundleID)
         ignoreMenuItem?.title = isIgnored ? "✓ Ignoring \(name)" : "Ignore \(name)"
         ignoreMenuItem?.isEnabled = true
+    }
+
+    // MARK: - Mouse gesture allowlist
+
+    private func gestureEnabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: "gestureEnabledBundleIDs") ?? [] }
+    private func setGestureEnabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: "gestureEnabledBundleIDs") }
+
+    @objc private func toggleGestureCurrentApp() {
+        guard let app = NSWorkspace.shared.frontmostApplication,
+              let bundleID = app.bundleIdentifier else { return }
+        var ids = gestureEnabledBundleIDs()
+        if let idx = ids.firstIndex(of: bundleID) { ids.remove(at: idx) } else { ids.append(bundleID) }
+        setGestureEnabledBundleIDs(ids)
+    }
+
+    private func updateGestureMenuItem() {
+        let paused = isSnappingPaused()
+        gestureMenuItem?.isHidden = paused
+        guard !paused,
+              let app = NSWorkspace.shared.frontmostApplication,
+              let bundleID = app.bundleIdentifier,
+              bundleID != Bundle.main.bundleIdentifier else {
+            gestureMenuItem?.title = "Enable Mouse Gesture for This App"
+            gestureMenuItem?.isEnabled = false
+            return
+        }
+        let name = app.localizedName ?? bundleID
+        let isEnabled = gestureEnabledBundleIDs().contains(bundleID)
+        gestureMenuItem?.title = isEnabled ? "✓ Mouse Gesture for \(name)" : "Enable Mouse Gesture for \(name)"
+        gestureMenuItem?.isEnabled = true
     }
 
     @objc private func showManageIgnored() {
@@ -322,5 +348,6 @@ extension AppDelegate: NSMenuDelegate {
         updateAccessibilityMenuItem()
         updatePauseMenuItem()
         updateIgnoreMenuItem()
+        updateGestureMenuItem()
     }
 }
