@@ -19,6 +19,7 @@ final class IOHIDButtonTrackerTests: XCTestCase {
 
     override func tearDown() {
         tracker.resetCalibration()
+        tracker = nil
         super.tearDown()
     }
 
@@ -33,6 +34,7 @@ final class IOHIDButtonTrackerTests: XCTestCase {
         tracker.processButtonEvent(usagePage: 0x09, usageID: 14, intValue: 0)
         XCTAssertEqual(downCount, 0)
         XCTAssertNil(UserDefaults.standard.object(forKey: "gestureButtonUsagePage"))
+        XCTAssertEqual(upCount, 0)
     }
 
     func testAfterCalibrationNonMatchingUsageIgnored() {

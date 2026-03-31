@@ -66,7 +66,7 @@ public class IOHIDButtonTracker {
         let storedPage  = UserDefaults.standard.object(forKey: kUDKeyUsagePage)  as? Int
         let storedUsage = UserDefaults.standard.object(forKey: kUDKeyUsageID)    as? Int
 
-        if storedPage == nil || storedUsage == nil {
+        if storedPage == nil && storedUsage == nil {
             guard intValue == 1 else { return }
             UserDefaults.standard.set(Int(usagePage), forKey: kUDKeyUsagePage)
             UserDefaults.standard.set(Int(usageID),   forKey: kUDKeyUsageID)
