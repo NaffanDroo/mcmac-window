@@ -51,6 +51,9 @@ public class MouseGestureManager {
 
     func handleMouseMoved(dx: CGFloat) {
         guard gestureButtonHeld else { return }
+        guard let bundleID = frontmostBundleID(),
+              gestureEnabledBundleIDs().contains(bundleID) else { return }
+        guard !isSnappingPaused() else { return }
 
         accumulatedDelta += dx
         guard abs(accumulatedDelta) >= deltaThreshold else { return }
@@ -60,6 +63,10 @@ public class MouseGestureManager {
         switchAction(direction)
         accumulatedDelta = 0
         lastSwitchTime = Date()
+    }
+
+    private func gestureEnabledBundleIDs() -> [String] {
+        UserDefaults.standard.stringArray(forKey: "gestureEnabledBundleIDs") ?? []
     }
 
     // MARK: - Space switching (implemented in Task 5)

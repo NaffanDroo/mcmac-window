@@ -86,4 +86,36 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(manager.accumulatedDelta, 0)
     }
+
+    // MARK: - Allowlist gating
+
+    func testAppNotInAllowlistSuppressesSwitch() {
+        UserDefaults.standard.set(["com.other.app"], forKey: "gestureEnabledBundleIDs")
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
+    func testAppInAllowlistAllowsSwitch() {
+        // setUp puts "com.test.app" in the list; frontmostBundleID returns "com.test.app"
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(firedDirections, [.right])
+    }
+
+    func testEmptyAllowlistSuppressesSwitch() {
+        UserDefaults.standard.set([], forKey: "gestureEnabledBundleIDs")
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
+    // MARK: - Pause gating
+
+    func testSnappingPausedSuppressesSwitch() {
+        manager.isSnappingPaused = { true }
+        manager.handleMouseDown(button: 3)
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
 }
