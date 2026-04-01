@@ -19,44 +19,43 @@ public class MouseGestureManager {
     var isSnappingPaused: () -> Bool = { UserDefaults.standard.bool(forKey: "snappingPaused") }
 
     // MARK: - Configuration
-    var gestureButtonIndex: Int = 3
     var deltaThreshold: CGFloat = 60
     var cooldown: TimeInterval = 0.5
 
     // MARK: - State
-    private(set) var gestureButtonHeld = false
+    var gestureButtonHeld = false
     private(set) var accumulatedDelta: CGFloat = 0
     var lastSwitchTime: Date?
+    var lastButtonDownTime: Date?
+
+    // MARK: - IOHIDButtonTracker
+    private(set) var tracker = IOHIDButtonTracker()
 
     // MARK: - Event tap
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
-    init() {}
+    init() {
+        tracker.onButtonDown = { [weak self] in
+            self?.gestureButtonHeld = true
+            self?.lastButtonDownTime = Date()
+        }
+        tracker.onButtonUp = { [weak self] in
+            self?.gestureButtonHeld = false
+            self?.accumulatedDelta = 0
+        }
+    }
 
     deinit {
         stop()
     }
 
-    // MARK: - Button state
-
-    func handleMouseDown(button: Int) {
-        guard button == gestureButtonIndex else { return }
-        gestureButtonHeld = true
-        logger.debug("gesture button down")
-    }
-
-    func handleMouseUp(button: Int) {
-        guard button == gestureButtonIndex else { return }
-        gestureButtonHeld = false
-        accumulatedDelta = 0
-        logger.debug("gesture button up, delta reset")
-    }
+    // MARK: - Mouse moved
 
     func handleMouseMoved(dx: CGFloat) {
         guard gestureButtonHeld else { return }
         guard let bundleID = frontmostBundleID(),
-              gestureEnabledBundleIDs().contains(bundleID) else { return }
+              !gestureDisabledBundleIDs().contains(bundleID) else { return }
         guard !isSnappingPaused() else { return }
 
         accumulatedDelta += dx
@@ -73,14 +72,34 @@ public class MouseGestureManager {
         lastSwitchTime = Date()
     }
 
-    private func gestureEnabledBundleIDs() -> [String] {
-        UserDefaults.standard.stringArray(forKey: "gestureEnabledBundleIDs") ?? []
+    private func gestureDisabledBundleIDs() -> [String] {
+        UserDefaults.standard.stringArray(forKey: "gestureDisabledBundleIDs") ?? []
+    }
+
+    // MARK: - Event handling (internal for tests)
+
+    func handleEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        switch type {
+        case .mouseMoved:
+            handleMouseMoved(dx: CGFloat(event.getDoubleValueField(.mouseEventDeltaX)))
+        case .keyDown:
+            let keyCode  = event.getIntegerValueField(.keyboardEventKeycode)
+            let hasCmd   = event.flags.contains(.maskCommand)
+            let inWindow = lastButtonDownTime.map { Date().timeIntervalSince($0) < 0.05 } ?? false
+            if keyCode == 48 && hasCmd && (gestureButtonHeld || inWindow) {
+                logger.debug("suppressing firmware Cmd+Tab")
+                return nil
+            }
+        default:
+            break
+        }
+        return Unmanaged.passUnretained(event)
     }
 
     // MARK: - Space switching
 
     static func postSpaceSwitch(direction: GestureDirection) {
-        let keyCode: CGKeyCode = direction == .right ? 124 : 123   // right / left arrow
+        let keyCode: CGKeyCode = direction == .right ? 124 : 123
         let src = CGEventSource(stateID: .hidSystemState)
         guard let down = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
               let up   = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false)
@@ -92,30 +111,26 @@ public class MouseGestureManager {
         logger.debug("posted space switch: \(direction == .right ? "right" : "left", privacy: .public)")
     }
 
-    // MARK: - Event tap
+    // MARK: - Lifecycle
 
     public func start() {
         guard eventTap == nil else { return }
-        if let stored = UserDefaults.standard.object(forKey: "gestureButtonIndex") as? Int {
-            gestureButtonIndex = stored
-        }
+        tracker.start()
 
         let eventMask: CGEventMask =
-            (1 << CGEventType.otherMouseDown.rawValue) |
-            (1 << CGEventType.otherMouseUp.rawValue)   |
-            (1 << CGEventType.otherMouseDragged.rawValue)
+            (1 << CGEventType.mouseMoved.rawValue) |
+            (1 << CGEventType.keyDown.rawValue)
 
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cghidEventTap,
             place: .headInsertEventTap,
-            options: .listenOnly,
+            options: .defaultTap,
             eventsOfInterest: eventMask,
             callback: { _, type, event, userInfo -> Unmanaged<CGEvent>? in
                 guard let userInfo = userInfo else { return Unmanaged.passUnretained(event) }
                 let mgr = Unmanaged<MouseGestureManager>.fromOpaque(userInfo).takeUnretainedValue()
-                mgr.handleEvent(type: type, event: event)
-                return Unmanaged.passUnretained(event)
+                return mgr.handleEvent(type: type, event: event)
             },
             userInfo: selfPtr
         ) else {
@@ -128,10 +143,11 @@ public class MouseGestureManager {
         runLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-        logger.info("MouseGestureManager started, monitoring button \(self.gestureButtonIndex)")
+        logger.info("MouseGestureManager started")
     }
 
     public func stop() {
+        tracker.stop()
         if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: false) }
         if let src = runLoopSource {
             CFRunLoopRemoveSource(CFRunLoopGetCurrent(), src, .commonModes)
@@ -139,19 +155,6 @@ public class MouseGestureManager {
         eventTap = nil
         runLoopSource = nil
         logger.info("MouseGestureManager stopped")
-    }
-
-    private func handleEvent(type: CGEventType, event: CGEvent) {
-        switch type {
-        case .otherMouseDown:
-            handleMouseDown(button: Int(event.getIntegerValueField(.mouseEventButtonNumber)))
-        case .otherMouseUp:
-            handleMouseUp(button: Int(event.getIntegerValueField(.mouseEventButtonNumber)))
-        case .otherMouseDragged:
-            handleMouseMoved(dx: CGFloat(event.getDoubleValueField(.mouseEventDeltaX)))
-        default:
-            break
-        }
     }
 
     /// Exposed for testing only — returns whether the tap exists and is enabled.

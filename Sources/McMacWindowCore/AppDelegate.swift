@@ -7,8 +7,8 @@ private enum UDKey {
     static let snappingPaused   = "snappingPaused"
     /// `[String]` of bundle identifiers whose windows should not be snapped.
     static let ignoredBundleIDs = "ignoredBundleIDs"
-    /// `[String]` of bundle identifiers for which the mouse gesture is enabled.
-    static let gestureEnabledBundleIDs = "gestureEnabledBundleIDs"
+    /// `[String]` of bundle identifiers for which the mouse gesture is disabled (opt-out denylist).
+    static let gestureDisabledBundleIDs = "gestureDisabledBundleIDs"
 }
 
 /// Manages the menu-bar status item, Accessibility permission flow,
@@ -281,17 +281,17 @@ The app will relaunch automatically and prompt for permission again.
         ignoreMenuItem?.isEnabled = true
     }
 
-    // MARK: - Mouse gesture allowlist
+    // MARK: - Mouse gesture denylist
 
-    private func gestureEnabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.gestureEnabledBundleIDs) ?? [] }
-    private func setGestureEnabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.gestureEnabledBundleIDs) }
+    private func gestureDisabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.gestureDisabledBundleIDs) ?? [] }
+    private func setGestureDisabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.gestureDisabledBundleIDs) }
 
     @objc private func toggleGestureCurrentApp() {
         guard let app = NSWorkspace.shared.frontmostApplication,
               let bundleID = app.bundleIdentifier else { return }
-        var ids = gestureEnabledBundleIDs()
+        var ids = gestureDisabledBundleIDs()
         if let idx = ids.firstIndex(of: bundleID) { ids.remove(at: idx) } else { ids.append(bundleID) }
-        setGestureEnabledBundleIDs(ids)
+        setGestureDisabledBundleIDs(ids)
     }
 
     private func updateGestureMenuItem() {
@@ -301,13 +301,13 @@ The app will relaunch automatically and prompt for permission again.
               let app = NSWorkspace.shared.frontmostApplication,
               let bundleID = app.bundleIdentifier,
               bundleID != Bundle.main.bundleIdentifier else {
-            gestureMenuItem?.title = "Enable Mouse Gesture for This App"
+            gestureMenuItem?.title = "Disable Mouse Gesture for This App"
             gestureMenuItem?.isEnabled = false
             return
         }
         let name = app.localizedName ?? bundleID
-        let isEnabled = gestureEnabledBundleIDs().contains(bundleID)
-        gestureMenuItem?.title = isEnabled ? "✓ Mouse Gesture for \(name)" : "Enable Mouse Gesture for \(name)"
+        let isDisabled = gestureDisabledBundleIDs().contains(bundleID)
+        gestureMenuItem?.title = isDisabled ? "Enable Mouse Gesture for \(name)" : "✓ Mouse Gesture for \(name)"
         gestureMenuItem?.isEnabled = true
     }
 
