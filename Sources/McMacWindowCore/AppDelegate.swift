@@ -319,7 +319,7 @@ The app will relaunch automatically and prompt for permission again.
         }
         let name = app.localizedName ?? bundleID
         let isDisabled = gestureDisabledBundleIDs().contains(bundleID)
-        gestureMenuItem?.title = isDisabled ? "Enable Mouse Gesture for \(name)" : "✓ Mouse Gesture for \(name)"
+        gestureMenuItem?.title = isDisabled ? "Enable Mouse Gesture for \(name)" : "Disable Mouse Gesture for \(name)"
         gestureMenuItem?.isEnabled = true
     }
 
