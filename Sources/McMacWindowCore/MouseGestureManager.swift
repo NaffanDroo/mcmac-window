@@ -86,6 +86,7 @@ public class MouseGestureManager {
         case .keyDown:
             let keyCode  = event.getIntegerValueField(.keyboardEventKeycode)
             let hasCmd   = event.flags.contains(.maskCommand)
+            // 50ms window: firmware Cmd+Tab can arrive slightly after the HID button-down callback.
             let inWindow = lastButtonDownTime.map { Date().timeIntervalSince($0) < 0.05 } ?? false
             if keyCode == 48 && hasCmd && (gestureButtonHeld || inWindow) {
                 logger.debug("suppressing firmware Cmd+Tab")

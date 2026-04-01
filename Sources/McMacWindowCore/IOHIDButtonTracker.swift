@@ -28,6 +28,8 @@ public class IOHIDButtonTracker {
             mgr,
             [kIOHIDVendorIDKey as String: kLogitechVendorID] as CFDictionary
         )
+        // passUnretained is safe here because deinit calls stop(), which closes
+        // the manager before self is deallocated. Do not remove the deinit.
         let ptr = Unmanaged.passUnretained(self).toOpaque()
         IOHIDManagerRegisterInputValueCallback(mgr, { ctx, _, _, value in
             guard let ctx = ctx else { return }
@@ -39,7 +41,10 @@ public class IOHIDButtonTracker {
             tracker.processButtonEvent(usagePage: usagePage, usageID: usageID, intValue: intValue)
         }, ptr)
         IOHIDManagerScheduleWithRunLoop(mgr, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
-        IOHIDManagerOpen(mgr, IOOptionBits(kIOHIDOptionsTypeNone))
+        let status = IOHIDManagerOpen(mgr, IOOptionBits(kIOHIDOptionsTypeNone))
+        if status != kIOReturnSuccess {
+            logger.error("IOHIDManagerOpen failed: \(status)")
+        }
         hidManager = mgr
         logger.info("IOHIDButtonTracker started")
     }
