@@ -21,6 +21,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     private var ignoreMenuItem: NSMenuItem?
     private var manageIgnoredMenuItem: NSMenuItem?
     private var gestureMenuItem: NSMenuItem?
+    private var recalibrateMenuItem: NSMenuItem?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -141,11 +142,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(manageItem)
         manageIgnoredMenuItem = manageItem
 
-        let gestureItem = NSMenuItem(title: "Enable Mouse Gesture for This App",
+        let gestureItem = NSMenuItem(title: "Disable Mouse Gesture for This App",
                                      action: #selector(toggleGestureCurrentApp), keyEquivalent: "")
         gestureItem.target = self
         menu.addItem(gestureItem)
         gestureMenuItem = gestureItem
+
+        let recalibrateItem = NSMenuItem(title: "Re-calibrate Gesture Button",
+                                         action: #selector(recalibrateGesture), keyEquivalent: "")
+        recalibrateItem.target = self
+        menu.addItem(recalibrateItem)
+        recalibrateMenuItem = recalibrateItem
         menu.addItem(.separator())
 
         let shortcutsItem = NSMenuItem(title: "Shortcuts…",
@@ -294,9 +301,14 @@ The app will relaunch automatically and prompt for permission again.
         setGestureDisabledBundleIDs(ids)
     }
 
+    @objc private func recalibrateGesture() {
+        MouseGestureManager.shared.tracker.resetCalibration()
+    }
+
     private func updateGestureMenuItem() {
         let paused = isSnappingPaused()
         gestureMenuItem?.isHidden = paused
+        recalibrateMenuItem?.isHidden = paused
         guard !paused,
               let app = NSWorkspace.shared.frontmostApplication,
               let bundleID = app.bundleIdentifier,
@@ -311,7 +323,12 @@ The app will relaunch automatically and prompt for permission again.
         gestureMenuItem?.isEnabled = true
     }
 
-    @objc private func showManageIgnored() {
+}
+
+// MARK: - Manage Ignored Apps panel
+
+private extension AppDelegate {
+    @objc func showManageIgnored() {
         let ids = ignoredBundleIDs()
         guard !ids.isEmpty else {
             let alert = NSAlert()
@@ -340,7 +357,6 @@ The app will relaunch automatically and prompt for permission again.
             setIgnoredBundleIDs(updated)
         }
     }
-
 }
 
 // MARK: - NSMenuDelegate
