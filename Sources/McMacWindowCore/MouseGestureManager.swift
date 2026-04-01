@@ -23,6 +23,7 @@ public class MouseGestureManager {
     var cooldown: TimeInterval = 0.5
 
     // MARK: - State
+    // var (not private(set)) so tests can inject button-held state directly.
     var gestureButtonHeld = false
     private(set) var accumulatedDelta: CGFloat = 0
     var lastSwitchTime: Date?

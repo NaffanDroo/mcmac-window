@@ -104,6 +104,13 @@ final class MouseGestureManagerTests: XCTestCase {
         XCTAssertEqual(firedDirections, [.right])
     }
 
+    func testNoFrontmostAppSuppressesSwitch() {
+        manager.frontmostBundleID = { nil }
+        manager.gestureButtonHeld = true
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertTrue(firedDirections.isEmpty)
+    }
+
     // MARK: - Pause gating
 
     func testSnappingPausedSuppressesSwitch() {
