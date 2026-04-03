@@ -221,9 +221,9 @@ and the static thirds) do not push through.
 
 When enabled for a specific app, holding the Logitech MX gesture button (the button under the thumb) and moving the mouse left or right switches macOS desktops (Mission Control Spaces) via `⌃←` / `⌃→`.
 
-The feature is **opt-out per application**. Use "Disable Mouse Gesture for [App]" in the menu bar to add or remove the frontmost app from the denylist. Use "Re-calibrate Gesture Button" to re-learn the button's HID usage (needed if the button mapping changes or on first launch). The gesture is suppressed when Snapping is paused.
+The feature is **opt-out per application**. Use "Disable Mouse Gesture for [App]" in the menu bar to add or remove the frontmost app from the denylist. The gesture is suppressed when Snapping is paused.
+
+The gesture works by detecting the Logitech firmware's `Cmd+Tab` pulse: when Command goes down <30ms before Tab, it's the hardware button (not keyboard). The `Cmd+Tab` is suppressed and a 400ms window opens — move the mouse left or right to switch spaces. If the window expires without movement, nothing happens.
 
 Configuration (via `UserDefaults`):
-- `gestureButtonUsagePage` (Int) — HID usage page of the gesture button; stored automatically on first press (calibration)
-- `gestureButtonUsageID` (Int) — HID usage ID of the gesture button; stored automatically on first press (calibration)
 - `gestureDisabledBundleIDs` ([String]) — the per-app denylist managed by the menu
