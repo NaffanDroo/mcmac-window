@@ -23,7 +23,7 @@ public class MouseGestureManager {
     // MARK: - Injectable dependencies (overridden in tests)
     var switchAction: (GestureDirection) -> Void = { MouseGestureManager.postSpaceSwitch(direction: $0) }
     var frontmostBundleID: () -> String? = { NSWorkspace.shared.frontmostApplication?.bundleIdentifier }
-    var isSnappingPaused: () -> Bool = { UserDefaults.standard.bool(forKey: "snappingPaused") }
+    var isSnappingPaused: () -> Bool = { UserDefaults.standard.bool(forKey: UDKey.snappingPaused.rawValue) }
 
     // MARK: - Configuration
     var deltaThreshold: CGFloat = 60
@@ -91,13 +91,22 @@ public class MouseGestureManager {
     }
 
     private func gestureDisabledBundleIDs() -> [String] {
-        UserDefaults.standard.stringArray(forKey: "gestureDisabledBundleIDs") ?? []
+        UserDefaults.standard.stringArray(forKey: UDKey.gestureDisabledBundleIDs.rawValue) ?? []
     }
 
     // MARK: - Event handling (internal for tests)
 
     func handleEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
+        case .tapDisabledByTimeout, .tapDisabledByUserInput:
+            // Re-enable the tap so gestures don't silently stop working.
+            if let tap = eventTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+                let reason = type == .tapDisabledByTimeout ? "timeout" : "userInput"
+                logger.warning("CGEventTap disabled (\(reason, privacy: .public)); re-enabled")
+            }
+            return Unmanaged.passUnretained(event)
+
         case .flagsChanged:
             // flagsChanged is never suppressed — only track Command timing.
             if event.flags.contains(.maskCommand) {

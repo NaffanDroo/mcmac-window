@@ -14,12 +14,12 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.switchAction = { [weak self] dir in self?.firedDirections.append(dir) }
         manager.frontmostBundleID = { "com.test.app" }
         manager.isSnappingPaused = { false }
-        UserDefaults.standard.removeObject(forKey: "gestureDisabledBundleIDs")
+        UserDefaults.standard.removeObject(forKey: UDKey.gestureDisabledBundleIDs.rawValue)
         firedDirections = []
     }
 
     override func tearDown() {
-        UserDefaults.standard.removeObject(forKey: "gestureDisabledBundleIDs")
+        UserDefaults.standard.removeObject(forKey: UDKey.gestureDisabledBundleIDs.rawValue)
         super.tearDown()
     }
 
@@ -156,7 +156,7 @@ final class MouseGestureManagerTests: XCTestCase {
     // MARK: - Denylist gating
 
     func testAppInDenylistSuppressesSwitch() {
-        UserDefaults.standard.set(["com.test.app"], forKey: "gestureDisabledBundleIDs")
+        UserDefaults.standard.set(["com.test.app"], forKey: UDKey.gestureDisabledBundleIDs.rawValue)
         manager.gestureWindowOpen = true
         manager.gestureWindowOpened = Date()
         manager.handleMouseMoved(dx: 60)
@@ -172,7 +172,7 @@ final class MouseGestureManagerTests: XCTestCase {
     }
 
     func testUnrelatedAppInDenylistDoesNotSuppressSwitch() {
-        UserDefaults.standard.set(["com.other.app"], forKey: "gestureDisabledBundleIDs")
+        UserDefaults.standard.set(["com.other.app"], forKey: UDKey.gestureDisabledBundleIDs.rawValue)
         manager.gestureWindowOpen = true
         manager.gestureWindowOpened = Date()
         manager.handleMouseMoved(dx: 60)

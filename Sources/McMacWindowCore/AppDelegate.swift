@@ -1,16 +1,6 @@
 import AppKit
 import ApplicationServices
 
-/// UserDefaults keys for persisted state.
-private enum UDKey {
-    /// When `true`, all hotkey-triggered snaps are silently ignored.
-    static let snappingPaused   = "snappingPaused"
-    /// `[String]` of bundle identifiers whose windows should not be snapped.
-    static let ignoredBundleIDs = "ignoredBundleIDs"
-    /// `[String]` of bundle identifiers for which the mouse gesture is disabled (opt-out denylist).
-    static let gestureDisabledBundleIDs = "gestureDisabledBundleIDs"
-}
-
 /// Manages the menu-bar status item, Accessibility permission flow,
 /// per-app ignore list, and the About / Shortcuts / Logs panels.
 public class AppDelegate: NSObject, NSApplicationDelegate {
@@ -21,11 +11,26 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     private var ignoreMenuItem: NSMenuItem?
     private var manageIgnoredMenuItem: NSMenuItem?
     private var gestureMenuItem: NSMenuItem?
+    /// Repeating timer that retries `MouseGestureManager.start()` until the
+    /// CGEventTap is successfully created (requires Accessibility permission).
+    private var gestureRetryTimer: Timer?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         HotkeyManager.shared.register()
         MouseGestureManager.shared.start()
+        // If the CGEventTap was not created (Accessibility not yet granted),
+        // retry every 2 seconds until it succeeds.
+        if MouseGestureManager.shared.eventTapIsEnabled == nil {
+            gestureRetryTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] timer in
+                guard let self else { timer.invalidate(); return }
+                MouseGestureManager.shared.start()
+                if MouseGestureManager.shared.eventTapIsEnabled != nil {
+                    timer.invalidate()
+                    self.gestureRetryTimer = nil
+                }
+            }
+        }
         // Silently prompt the OS permission sheet (no custom alert).
         // kAXTrustedCheckOptionPrompt triggers the system sheet only when
         // permission has never been granted; it is a no-op once trusted.
@@ -235,12 +240,12 @@ The app will relaunch automatically and prompt for permission again.
     // MARK: - Pause snapping
 
     private func isSnappingPaused() -> Bool {
-        UserDefaults.standard.bool(forKey: UDKey.snappingPaused)
+        UserDefaults.standard.bool(forKey: UDKey.snappingPaused.rawValue)
     }
 
     @objc private func togglePause() {
         let nowPaused = !isSnappingPaused()
-        UserDefaults.standard.set(nowPaused, forKey: UDKey.snappingPaused)
+        UserDefaults.standard.set(nowPaused, forKey: UDKey.snappingPaused.rawValue)
         statusItem?.button?.appearsDisabled = nowPaused
     }
 
@@ -250,8 +255,8 @@ The app will relaunch automatically and prompt for permission again.
 
     // MARK: - Per-app ignore list
 
-    private func ignoredBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.ignoredBundleIDs) ?? [] }
-    private func setIgnoredBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.ignoredBundleIDs) }
+    private func ignoredBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.ignoredBundleIDs.rawValue) ?? [] }
+    private func setIgnoredBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.ignoredBundleIDs.rawValue) }
     private func displayName(for bundleID: String) -> String {
         NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first?.localizedName ?? bundleID
     }
@@ -284,8 +289,8 @@ The app will relaunch automatically and prompt for permission again.
 
     // MARK: - Mouse gesture denylist
 
-    private func gestureDisabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.gestureDisabledBundleIDs) ?? [] }
-    private func setGestureDisabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.gestureDisabledBundleIDs) }
+    private func gestureDisabledBundleIDs() -> [String] { UserDefaults.standard.stringArray(forKey: UDKey.gestureDisabledBundleIDs.rawValue) ?? [] }
+    private func setGestureDisabledBundleIDs(_ ids: [String]) { UserDefaults.standard.set(ids, forKey: UDKey.gestureDisabledBundleIDs.rawValue) }
 
     @objc private func toggleGestureCurrentApp() {
         guard let app = NSWorkspace.shared.frontmostApplication,
