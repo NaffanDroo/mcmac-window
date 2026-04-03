@@ -161,6 +161,7 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.gestureWindowOpened = Date()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
+        XCTAssertTrue(manager.gestureWindowOpen)
     }
 
     func testAppNotInDenylistAllowsSwitch() {
@@ -194,6 +195,7 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.gestureWindowOpened = Date()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
+        XCTAssertTrue(manager.gestureWindowOpen)
     }
 
     // MARK: - Cooldown

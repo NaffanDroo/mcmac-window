@@ -219,7 +219,7 @@ and the static thirds) do not push through.
 
 ### Mouse gesture desktop switching
 
-When enabled for a specific app, holding the Logitech MX gesture button (the button under the thumb) and moving the mouse left or right switches macOS desktops (Mission Control Spaces) via `⌃←` / `⌃→`.
+Pressing the Logitech MX gesture button (the button under the thumb) and then moving the mouse left or right switches macOS desktops (Mission Control Spaces) via `⌃←` / `⌃→`.
 
 The feature is **opt-out per application**. Use "Disable Mouse Gesture for [App]" in the menu bar to add or remove the frontmost app from the denylist. The gesture is suppressed when Snapping is paused.
 
