@@ -122,3 +122,45 @@
 - This file is the canonical “do not re-scan everything if not needed” source.
 - No task-specific code patterns should be added here; refer to this file for setup and validation.
 - If behavior is unclear, re-check `CLAUDE.md`, `CONTRIBUTING.md`, and `ci.yml` in this repo.
+## 10) Code review guidelines
+
+When reviewing a pull request, check for the following issues specific to this codebase.
+
+### Coordinate-system correctness (highest priority)
+- All AppKit↔AX coordinate conversion must go through `axRect(from:primaryScreenHeight:)` in `Geometry.swift`. A new conversion inlined elsewhere is always a bug.
+- In `computeTargetRect`, geometry is in AX coordinates; `vf` is passed as an AppKit rect and converted at the top with `axRect`. Verify new geometry branches use `ax.minX`/`ax.minY`, not `vf.minX`/`vf.minY`.
+- Tests in `GeometryTests.swift` assert exact pixel values. If expected values change without an intentional geometry change, that is a sign of a coordinate bug.
+
+### AX API patterns
+- Focused window lookup must always use `NSWorkspace.shared.frontmostApplication` — never `kAXFocusedApplicationAttribute` on the system-wide AX element.
+- Every `AXUIElementCopyAttributeValue` call must check `== .success` before using the result.
+- `as! AXUIElement` and `as! AXValue` for CF types are expected and should carry a `// swiftlint:disable:this force_cast` comment. New force casts on non-CF types are not acceptable.
+
+### Hotkey registration
+- Hotkeys must use Carbon `RegisterEventHotKey` in `HotkeyManager.swift`. Any use of `NSEvent.addGlobalMonitorForEvents` is a bug — it silently fails without Input Monitoring permission.
+- New bindings must include `keyCode`, `carbonMods`, `action`, `display`, and `group`. The `display` string is shown verbatim in the shortcuts panel.
+
+### New WindowAction checklist
+If a new `WindowAction` case is added, verify all five steps are present:
+1. Case added to `WindowAction` enum.
+2. Geometry branch added to `computeTargetRect` switch (exhaustive — no `default:`).
+3. Binding entry added to `HotkeyManager.bindings`.
+4. Unit test with exact pixel values added to `GeometryTests.swift`.
+5. Keyboard shortcuts table in `CLAUDE.md` updated.
+
+### Swift / safety
+- No force unwraps (`!`) on Optional types. Use `guard let`, `if let`, or `??`.
+- Prefer `let` over `var`; mutability should be justified.
+- New `UserDefaults` keys must be added to the `UDKey` enum in `AppDelegate.swift`, not as inline string literals.
+- Use `OSLog` via `Logger(subsystem:category:)` for all new logging — no `print()` statements.
+
+### Tests
+- `WindowMoverTests` must use `throw XCTSkip(...)` (not `return`) for AX-dependent paths so CI counts them as skipped rather than passing vacuously.
+- Do not lower tolerances in `rectsMatch` or remove assertions to make a failing test pass — fix the geometry.
+- `GeometryTests` and `PushThroughTests` are deterministic and must never be skipped.
+
+### CI compliance
+- `./build.sh --warnings-as-errors` must pass — no suppressed warnings.
+- `swiftlint --strict` must pass — `// swiftlint:disable` is only acceptable for the documented CF force-cast pattern.
+- Commit messages must follow Conventional Commits (`feat:`, `fix:`, `refactor:`, etc.).
+- No new external dependencies or Xcode project files without explicit approval.
