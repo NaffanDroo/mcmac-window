@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.3](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.2...v0.6.3) (2026-04-03)
+
+
+### Miscellaneous
+
+* add [@github-copilot](https://github.com/github-copilot) as a code owner and Copilot instructions ([#74](https://github.com/NaffanDroo/mcmac-window/issues/74)) ([1b295a7](https://github.com/NaffanDroo/mcmac-window/commit/1b295a7fcfc982d827692e727608378380ec25ec))
+* **deps:** bump marocchino/sticky-pull-request-comment from 2.9.1 to 3.0.2 ([#71](https://github.com/NaffanDroo/mcmac-window/issues/71)) ([9093afc](https://github.com/NaffanDroo/mcmac-window/commit/9093afc812954f3ac26d00b520dbbefdc4d5a5b5))
+
 ## [0.6.2](https://github.com/NaffanDroo/mcmac-window/compare/v0.6.1...v0.6.2) (2026-03-28)
 
 
