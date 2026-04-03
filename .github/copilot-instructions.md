@@ -67,7 +67,7 @@
 
 ### 4.5 Lint
 
-- `swiftlint --strict` is invoked by pre-commit hook and CI via pre-push.
+- `swiftlint --strict` is invoked by local git hooks, and CI runs SwiftLint via the GitHub workflow.
 - `pre-commit run --all-files` to validate local lint and commit-msg rules.
 
 ### 4.6 Sanity checks / additional validations
