@@ -64,8 +64,14 @@ public class MouseGestureManager {
         }
 
         guard let bundleID = frontmostBundleID(),
-              !gestureDisabledBundleIDs().contains(bundleID) else { return }
-        guard !isSnappingPaused() else { return }
+              !gestureDisabledBundleIDs().contains(bundleID) else {
+            accumulatedDelta = 0
+            return
+        }
+        guard !isSnappingPaused() else {
+            accumulatedDelta = 0
+            return
+        }
 
         accumulatedDelta += dx
         guard abs(accumulatedDelta) >= deltaThreshold else { return }
@@ -93,6 +99,7 @@ public class MouseGestureManager {
     func handleEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
         case .flagsChanged:
+            // flagsChanged is never suppressed — only track Command timing.
             if event.flags.contains(.maskCommand) {
                 if lastCmdDownTime == nil {
                     lastCmdDownTime = Date()

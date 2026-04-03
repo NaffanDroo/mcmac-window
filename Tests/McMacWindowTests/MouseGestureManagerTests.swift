@@ -111,6 +111,7 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.gestureWindowOpened = Date()
         manager.handleMouseMoved(dx: -60)
         XCTAssertEqual(firedDirections, [.left])
+        XCTAssertFalse(manager.gestureWindowOpen)
     }
 
     func testDeltaAccumulates() {
