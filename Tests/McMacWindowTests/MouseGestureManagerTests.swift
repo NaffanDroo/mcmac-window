@@ -1,12 +1,14 @@
-import XCTest
-import CoreGraphics
 import ApplicationServices
+import CoreGraphics
+import XCTest
+
 @testable import McMacWindowCore
 
 final class MouseGestureManagerTests: XCTestCase {
 
     var manager: MouseGestureManager!
     var firedDirections: [GestureDirection] = []
+    var mockButtonTracker: MockIOHIDButtonTracker!
 
     override func setUp() {
         super.setUp()
@@ -14,6 +16,11 @@ final class MouseGestureManagerTests: XCTestCase {
         manager.switchAction = { [weak self] dir in self?.firedDirections.append(dir) }
         manager.frontmostBundleID = { "com.test.app" }
         manager.isSnappingPaused = { false }
+
+        // Inject mock button tracker
+        mockButtonTracker = MockIOHIDButtonTracker()
+        manager.buttonTracker = mockButtonTracker
+
         UserDefaults.standard.removeObject(forKey: UDKey.gestureDisabledBundleIDs.rawValue)
         firedDirections = []
     }
@@ -23,133 +30,99 @@ final class MouseGestureManagerTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - flagsChanged discrimination
+    // MARK: - Button state opening/closing gesture window
 
-    func testFirmwareCmdTabSuppressed() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 48, keyDown: true) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = .maskCommand
-        // Simulate flagsChanged <30ms ago
-        manager.lastCmdDownTime = Date()
-        let result = manager.handleEvent(type: .keyDown, event: event)
-        XCTAssertNil(result, "Firmware Cmd+Tab should be suppressed")
-        XCTAssertTrue(manager.gestureWindowOpen, "Gesture window should open after suppression")
+    func testButtonDownOpensGestureWindow() {
+        XCTAssertFalse(manager.gestureWindowOpen)
+        manager.handleButtonDown()
+        XCTAssertTrue(manager.gestureWindowOpen)
     }
 
-    func testKeyboardCmdTabPassesThrough() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 48, keyDown: true) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = .maskCommand
-        // Simulate Command held for 100ms (keyboard user)
-        manager.lastCmdDownTime = Date(timeIntervalSinceNow: -0.1)
-        let result = manager.handleEvent(type: .keyDown, event: event)
-        XCTAssertNotNil(result, "Keyboard Cmd+Tab should pass through")
-        XCTAssertFalse(manager.gestureWindowOpen, "Gesture window should not open for keyboard Cmd+Tab")
-    }
-
-    func testFlagsChangedSetsCmdDownTime() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: false) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = .maskCommand
-        XCTAssertNil(manager.lastCmdDownTime)
-        _ = manager.handleEvent(type: .flagsChanged, event: event)
-        XCTAssertNotNil(manager.lastCmdDownTime)
-    }
-
-    func testFlagsChangedClearsCmdDownTimeOnRelease() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: false) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = [] // no modifiers = Command released
-        manager.lastCmdDownTime = Date()
-        _ = manager.handleEvent(type: .flagsChanged, event: event)
-        XCTAssertNil(manager.lastCmdDownTime)
-    }
-
-    func testNonTabKeyPassesThroughEvenWithRecentCmd() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: true) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = .maskCommand
-        manager.lastCmdDownTime = Date()
-        let result = manager.handleEvent(type: .keyDown, event: event)
-        XCTAssertNotNil(result, "Non-Tab key should pass through")
+    func testButtonUpClosesGestureWindow() {
+        manager.handleButtonDown()
+        manager.handleButtonUp()
         XCTAssertFalse(manager.gestureWindowOpen)
     }
 
-    func testNoCmdDownTimePassesThrough() throws {
-        guard let src = CGEventSource(stateID: .hidSystemState),
-              let event = CGEvent(keyboardEventSource: src, virtualKey: 48, keyDown: true) else {
-            throw XCTSkip("Cannot create CGEvent in test environment")
-        }
-        event.flags = .maskCommand
-        manager.lastCmdDownTime = nil
-        let result = manager.handleEvent(type: .keyDown, event: event)
-        XCTAssertNotNil(result, "Cmd+Tab with no flagsChanged record passes through")
+    func testButtonDownResetsAccumulatedDelta() {
+        manager.accumulatedDelta = 50
+        manager.handleButtonDown()
+        XCTAssertEqual(manager.accumulatedDelta, 0)
     }
 
-    // MARK: - Gesture window + movement
-
-    func testGestureRight() {
+    func testButtonUpResetsAccumulatedDelta() {
         manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.accumulatedDelta = 100
+        manager.handleButtonUp()
+        XCTAssertEqual(manager.accumulatedDelta, 0)
+    }
+
+    // MARK: - Mouse movement while button held
+
+    func testMouseMovementRightWhenButtonHeld() {
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(firedDirections, [.right])
-        XCTAssertFalse(manager.gestureWindowOpen)
     }
 
-    func testGestureLeft() {
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+    func testMouseMovementLeftWhenButtonHeld() {
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: -60)
         XCTAssertEqual(firedDirections, [.left])
-        XCTAssertFalse(manager.gestureWindowOpen)
     }
 
-    func testDeltaAccumulates() {
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
-        manager.handleMouseMoved(dx: 30)
-        manager.handleMouseMoved(dx: 30)
-        XCTAssertEqual(firedDirections, [.right])
+    func testMouseMovementIgnoredWhenButtonNotHeld() {
+        manager.handleMouseMoved(dx: 100)
+        XCTAssertTrue(firedDirections.isEmpty)
     }
 
-    func testBelowThresholdNoSwitch() {
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+    func testSmallMovementsAccumulate() {
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 20)
+        manager.handleMouseMoved(dx: 20)
+        manager.handleMouseMoved(dx: 20)
+        XCTAssertEqual(
+            firedDirections.count, 1, "Should fire when accumulated delta reaches threshold")
+        XCTAssertEqual(firedDirections.first, .right)
+    }
+
+    func testMovementBelowThresholdDoesNotFire() {
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 59)
         XCTAssertTrue(firedDirections.isEmpty)
+        XCTAssertEqual(manager.accumulatedDelta, 59)
     }
 
-    func testDeltaResetsAfterSwitch() {
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
-        manager.handleMouseMoved(dx: 60)
-        XCTAssertEqual(manager.accumulatedDelta, 0)
-        XCTAssertFalse(manager.gestureWindowOpen)
-    }
-
-    func testWindowExpiryNoSwitch() {
-        manager.gestureWindowOpen = true
-        // Window opened 500ms ago — past the 400ms expiry
-        manager.gestureWindowOpened = Date(timeIntervalSinceNow: -0.5)
-        manager.handleMouseMoved(dx: 60)
-        XCTAssertTrue(firedDirections.isEmpty, "Expired window should not fire switch")
-        XCTAssertFalse(manager.gestureWindowOpen, "Window should be closed after expiry")
-    }
-
-    func testMovementIgnoredWhenWindowClosed() {
-        manager.gestureWindowOpen = false
-        manager.handleMouseMoved(dx: 60)
+    func testMixedDirectionsAccumulate() {
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 50)
+        manager.handleMouseMoved(dx: -40)
+        XCTAssertEqual(manager.accumulatedDelta, 10)
         XCTAssertTrue(firedDirections.isEmpty)
+
+        manager.handleMouseMoved(dx: -80)
+        XCTAssertEqual(firedDirections.count, 1)
+        XCTAssertEqual(firedDirections.first, .left)
+    }
+
+    // MARK: - Gesture window lifecycle
+
+    func testButtonCycleClearsState() {
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(firedDirections.count, 1)
+
+        manager.handleButtonUp()
+        XCTAssertFalse(manager.gestureWindowOpen)
+        XCTAssertEqual(manager.accumulatedDelta, 0)
+    }
+
+    func testReleaseWithoutThresholdClearsState() {
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 30)
+        manager.handleButtonUp()
+        XCTAssertTrue(firedDirections.isEmpty)
+        XCTAssertFalse(manager.gestureWindowOpen)
         XCTAssertEqual(manager.accumulatedDelta, 0)
     }
 
@@ -157,32 +130,29 @@ final class MouseGestureManagerTests: XCTestCase {
 
     func testAppInDenylistSuppressesSwitch() {
         UserDefaults.standard.set(["com.test.app"], forKey: UDKey.gestureDisabledBundleIDs.rawValue)
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
         XCTAssertTrue(manager.gestureWindowOpen)
     }
 
     func testAppNotInDenylistAllowsSwitch() {
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(firedDirections, [.right])
     }
 
     func testUnrelatedAppInDenylistDoesNotSuppressSwitch() {
-        UserDefaults.standard.set(["com.other.app"], forKey: UDKey.gestureDisabledBundleIDs.rawValue)
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        UserDefaults.standard.set(
+            ["com.other.app"], forKey: UDKey.gestureDisabledBundleIDs.rawValue)
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(firedDirections, [.right])
     }
 
     func testNoFrontmostAppSuppressesSwitch() {
         manager.frontmostBundleID = { nil }
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
     }
@@ -191,8 +161,7 @@ final class MouseGestureManagerTests: XCTestCase {
 
     func testSnappingPausedSuppressesSwitch() {
         manager.isSnappingPaused = { true }
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
         XCTAssertTrue(manager.gestureWindowOpen)
@@ -202,8 +171,7 @@ final class MouseGestureManagerTests: XCTestCase {
 
     func testCooldownSuppressesImmediateRepeat() {
         manager.lastSwitchTime = Date()
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertTrue(firedDirections.isEmpty)
         XCTAssertEqual(manager.accumulatedDelta, 0)
@@ -211,10 +179,46 @@ final class MouseGestureManagerTests: XCTestCase {
 
     func testSwitchFiresAfterCooldownExpires() {
         manager.lastSwitchTime = Date(timeIntervalSinceNow: -0.6)
-        manager.gestureWindowOpen = true
-        manager.gestureWindowOpened = Date()
+        manager.handleButtonDown()
         manager.handleMouseMoved(dx: 60)
         XCTAssertEqual(firedDirections, [.right])
+    }
+
+    // MARK: - Complete flow with physical button
+
+    func testCompleteFlow_ButtonDownMouseMovement_FiresSwitch() {
+        manager.handleButtonDown()
+        XCTAssertTrue(manager.gestureWindowOpen)
+
+        manager.handleMouseMoved(dx: 60)
+        XCTAssertEqual(firedDirections.count, 1)
+        XCTAssertEqual(firedDirections.first, .right)
+    }
+
+    func testCompleteFlow_MultipleButtonCycles() {
+        // First gesture
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 60)
+        manager.handleButtonUp()
+
+        // Clear cooldown so second gesture can fire
+        manager.lastSwitchTime = nil
+
+        // Second gesture
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: -60)
+        manager.handleButtonUp()
+
+        XCTAssertEqual(firedDirections.count, 2)
+        XCTAssertEqual(firedDirections[0], .right)
+        XCTAssertEqual(firedDirections[1], .left)
+    }
+
+    func testCompleteFlow_ReleaseBeforeThresholdDoesntFire() {
+        manager.handleButtonDown()
+        manager.handleMouseMoved(dx: 50)
+        manager.handleButtonUp()
+        XCTAssertTrue(firedDirections.isEmpty)
     }
 
     // MARK: - CGEventTap lifecycle (requires Accessibility permission)
@@ -240,5 +244,17 @@ final class MouseGestureManagerTests: XCTestCase {
         mgr.start()
         XCTAssertEqual(mgr.eventTapIsEnabled, tapAfterFirst)
         mgr.stop()
+    }
+}
+
+// MARK: - Mock Button Tracker
+
+class MockIOHIDButtonTracker: IOHIDButtonTracker {
+    override func start() {
+        // No-op for tests
+    }
+
+    override func stop() {
+        // No-op for tests
     }
 }
